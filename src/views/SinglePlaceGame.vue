@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import { createLevel, type Position } from '@/stores/single-entity-level'
 import type { Entity, EntityId } from '@/stores/entity';
+import ToolTip from '@/components/ToolTip.vue';
 
 const gridX = 5;
 const gridY = 5
@@ -23,30 +24,78 @@ const value = ref<number>(0)
 
 const currentKeys = computed(() => entityIds.value.length > 0 ? Object.keys(entities.value[selectedEntity.value]) : undefined)
 
+type Action = {
+  actor: EntityId
+  type: 'move' | 'attack'
+  target?: EntityId[]
+  targetPositions: Position[]
+}
+const action = ref<Action>({
+  actor: selectedEntity.value,
+  type: 'move',
+  targetPositions: selectedCells.value
+})
+// needs to be an action
+const wantsToMove = ref<boolean>(false)
+
+const handlePositionClick = (position: Position) => {
+
+  if (wantsToMove.value) {
+    const [newX, newY] = position.split('-').map(v => Number(v))
+    entities.value[selectedEntity.value].move(newX, newY)
+    deselect()
+    wantsToMove.value = false
+    return
+  }
+
+  //deselect
+  if (grid.value[position] === selectedEntity.value) {
+    deselect()
+    wantsToMove.value = false
+    return
+  }
+  // deselect actor
+  // --> remove actions --> clear selected action
+
+  // select actor if position has entity
+  if (grid.value[position]) {
+    selectedCells.value.clear()
+    selectedCells.value.add(position)
+    selectedEntity.value = grid.value[position]
+    return
+  }
+
+
+  // select action
+  // select target
+}
+
+const deselect = () => {
+  selectedCells.value.clear()
+  selectedEntity.value = ''
+}
+
 </script>
 
 <template>
   <div class="layout">
     <div>
       <div class="inputs">
-        <label for="entity">Entity</label>
-        <select v-model="selectedEntity" v-if="entityIds.length > 0" id="entity">
-          <option v-for=" id  in  entityIds " :value="id" :key="id">{{ id }}</option>
-        </select>
-        <br />
-        <label for="key">Key</label>
-        <select v-if="selectedEntity" v-model="currentKey" id="key">
-          <option v-for=" key  in  currentKeys " :value="key" :key="key">{{ key }}</option>
-        </select>
-        <input v-model="value" type="number">
-        <button @click="() => updateEntity(selectedEntity, currentKey, value)">change value</button>
+        <div v-if="selectedEntity">
+          <p>{{ entities[selectedEntity].name }}</p>
+          <pre>
+            {{ entities[selectedEntity] }}
+          </pre>
+          <button @click="wantsToMove = true">move</button>
+          <button>attack</button>
+        </div>
         <br />
         <button @click="() => {
           try {
             const id = addEntity(
               0, 0, {
               level: 1,
-              name: 'Gobbie',
+              name: Math.random() < 0.5 ? 'red' : 'blue',
               skills: [],
               defense: 10,
               strength: 10,
@@ -66,11 +115,12 @@ const currentKeys = computed(() => entityIds.value.length > 0 ? Object.keys(enti
     </div>
 
     <!-- GRID -->
-    <div class="grid">
-      <div :class="{ selected: selectedCells.has(position) }" @click="() => { toggleSelectedCell(position) }"
+    <div class="grid" @contextmenu.prevent="deselect">
+      <div :class="{ selected: selectedCells.has(position) }" @click="() => { handlePositionClick(position) }"
         v-for="( entityId, position ) in  grid " :key="position" :text="entityId">
         <div>
-          {{ entityId ? entities[entityId].name : '' }}
+          <img draggable="false" class="idle" v-if="entityId"
+            :src="`/characters/chararacter-${entities[entityId].name}.png`" :alt="entities[entityId].name" />
         </div>
       </div>
     </div>
@@ -123,6 +173,39 @@ const currentKeys = computed(() => entityIds.value.length > 0 ? Object.keys(enti
   gap: 5px;
   grid-template-columns: repeat(v-bind(gridX), 40px);
   grid-template-rows: repeat(v-bind(gridY), 40px);
+}
+
+.grid img {
+  user-select: none;
+  position: relative;
+  top: -11px;
+}
+
+.idle {
+  animation: 0.7s linear 0s infinite idle;
+  transform-origin: bottom;
+}
+
+@keyframes idle {
+  0% {
+    transform: scaleY(1);
+  }
+
+  20% {
+    transform: scaleY(0.95);
+  }
+
+  30% {
+    transform: scaleY(1);
+  }
+
+  90% {
+    transform: scaleY(1.02);
+  }
+
+  100% {
+    transform: scaleY(1);
+  }
 }
 
 .grid>div {

@@ -119,7 +119,7 @@ const deselect = () => {
         v-for="( entityId, position ) in  grid " :key="position" :text="entityId">
         <div>
           <img draggable="false" class="idle" v-if="entityId"
-            :src="`/characters/chararacter-${entities[entityId].name}.png`" :alt="entities[entityId].name" />
+            :src="`/characters/character-${entities[entityId].name}.png`" :alt="entities[entityId].name" />
         </div>
       </div>
     </div>

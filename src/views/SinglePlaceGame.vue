@@ -80,6 +80,27 @@ const deselect = () => {
 <template>
   <div class="layout">
     <div>
+      <button @click="() => {
+        try {
+          const id = addEntity(
+            0, 0, {
+            level: 1,
+            name: Math.random() < 0.5 ? (Math.random() < 0.5 ? 'purple' : 'red') : 'blue',
+            skills: [],
+            defense: 10,
+            strength: 10,
+            health: 10,
+            speed: 10,
+            status: [],
+            magicSkill: 50,
+          })
+          console.log('successfully added: ', id)
+        } catch (err) {
+          console.log(err)
+
+        }
+      }
+        ">addGoblin</button>
       <div class="inputs">
         <div v-if="selectedEntity">
           <p>{{ entities[selectedEntity].name }}</p>
@@ -89,28 +110,6 @@ const deselect = () => {
           <button @click="wantsToMove = true">move</button>
           <button>attack</button>
         </div>
-        <br />
-        <button @click="() => {
-          try {
-            const id = addEntity(
-              0, 0, {
-              level: 1,
-              name: Math.random() < 0.5 ? 'red' : 'blue',
-              skills: [],
-              defense: 10,
-              strength: 10,
-              health: 10,
-              speed: 10,
-              status: [],
-              magicSkill: 50,
-            })
-            console.log('successfully added: ', id)
-          } catch (err) {
-            console.log(err)
-
-          }
-        }
-          ">addGoblin</button>
       </div>
     </div>
 
@@ -141,7 +140,7 @@ const deselect = () => {
 .layout {
   margin-top: 20px;
   display: grid;
-  grid-template-columns: 2fr 7fr;
+  grid-template-columns: 7fr 2fr;
 }
 
 .inputs>* {

@@ -1,8 +1,9 @@
 <script lang="ts" setup>
 import { computed, ref } from 'vue'
+import { useMachine } from '@xstate/vue'
 import { createLevel, type Position } from '@/stores/single-entity-level'
+import { handleTurnsMachine } from '@/state-machines/playerTurns'
 import type { Entity, EntityId } from '@/stores/entity';
-import ToolTip from '@/components/ToolTip.vue';
 
 const gridX = 5;
 const gridY = 5
@@ -17,6 +18,8 @@ const toggleSelectedCell = (position: Position) => {
     selectedCells.value.add(position)
   }
 }
+
+const playerTurnMachine = useMachine(handleTurnsMachine)
 
 const selectedEntity = ref<string>('')
 const currentKey = ref<keyof Entity>('health')

@@ -5,6 +5,9 @@ settings:
   excludeLinksFromLockfile: false
 
 dependencies:
+  '@xstate/vue':
+    specifier: ^3.1.4
+    version: 3.1.4(vue@3.4.38)(xstate@5.18.2)
   pinia:
     specifier: ^2.1.7
     version: 2.2.2(typescript@5.4.5)(vue@3.4.38)
@@ -14,6 +17,9 @@ dependencies:
   vue-router:
     specifier: ^4.3.3
     version: 4.4.3(vue@3.4.38)
+  xstate:
+    specifier: ^5.18.2
+    version: 5.18.2
 
 devDependencies:
   '@rushstack/eslint-patch':
@@ -922,6 +928,19 @@ packages:
   /@vue/tsconfig@0.5.1:
     resolution: {integrity: sha512-VcZK7MvpjuTPx2w6blwnwZAu5/LgBUtejFOi3pPGQFXQN5Ela03FUtd2Qtg4yWGGissVL0dr6Ro1LfOFh+PCuQ==}
     dev: true
+
+  /@xstate/vue@3.1.4(vue@3.4.38)(xstate@5.18.2):
+    resolution: {integrity: sha512-OVB97qJ6l/NuIPoffSkZfjWCMqeU208xmb7wNzPZsls4XDlTpUkcQfc20HIA9bEnQKqKduJWCppMOmICSBcEsg==}
+    peerDependencies:
+      vue: ^3.0.0
+      xstate: ^5.18.2
+    peerDependenciesMeta:
+      xstate:
+        optional: true
+    dependencies:
+      vue: 3.4.38(typescript@5.4.5)
+      xstate: 5.18.2
+    dev: false
 
   /abbrev@2.0.0:
     resolution: {integrity: sha512-6/mh1E2u2YgEsCHdY0Yx5oW+61gZU+1vXaoiHHrpKeuRNNgFvS+/jrwHiQhB5apAf5oB7UB7E19ol2R2LKH8hQ==}
@@ -2821,6 +2840,10 @@ packages:
   /xmlchars@2.2.0:
     resolution: {integrity: sha512-JZnDKK8B0RCDw84FNdDAIpZK+JuJw+s7Lz8nksI7SIuU3UXJJslUthsi+uWBUYOwPFwW7W7PRLRfUKpxjtjFCw==}
     dev: true
+
+  /xstate@5.18.2:
+    resolution: {integrity: sha512-hab5VOe29D0agy8/7dH1lGw+7kilRQyXwpaChoMu4fe6rDP+nsHYhDYKfS2O4iXE7myA98TW6qMEudj/8NXEkA==}
+    dev: false
 
   /yocto-queue@0.1.0:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}

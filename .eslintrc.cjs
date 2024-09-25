@@ -10,6 +10,10 @@ module.exports = {
     '@vue/eslint-config-typescript',
     '@vue/eslint-config-prettier/skip-formatting'
   ],
+  rules: {
+    files: ['*.vue'],
+    'eslintvue/first-attribute-linebreak': 'off'
+  },
   parserOptions: {
     ecmaVersion: 'latest'
   }

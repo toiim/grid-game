@@ -1,8 +1,8 @@
 <script lang="ts" setup>
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useMachine } from '@xstate/vue'
 import { createLevel, type Position } from '@/stores/single-entity-level'
-import { handleTurnsMachine } from '@/state-machines/playerTurns'
+import { handleTurnsMachine } from '@/state-machines/handleTurns'
 import type { Entity, EntityId } from '@/stores/entity';
 
 const gridX = 5;
@@ -19,7 +19,7 @@ const toggleSelectedCell = (position: Position) => {
   }
 }
 
-const playerTurnMachine = useMachine(handleTurnsMachine)
+const { actorRef: handleTurnsActor, snapshot: handleTurnsSnapshot } = useMachine(handleTurnsMachine)
 
 const selectedEntity = ref<string>('')
 const currentKey = ref<keyof Entity>('health')
@@ -27,17 +27,6 @@ const value = ref<number>(0)
 
 const currentKeys = computed(() => entityIds.value.length > 0 ? Object.keys(entities.value[selectedEntity.value]) : undefined)
 
-type Action = {
-  actor: EntityId
-  type: 'move' | 'attack'
-  target?: EntityId[]
-  targetPositions: Position[]
-}
-const action = ref<Action>({
-  actor: selectedEntity.value,
-  type: 'move',
-  targetPositions: selectedCells.value
-})
 // needs to be an action
 const wantsToMove = ref<boolean>(false)
 
@@ -78,57 +67,61 @@ const deselect = () => {
   selectedEntity.value = ''
 }
 
+onMounted(() => {
+  handleTurnsActor.start()
+  addEntity(
+    0, 0, {
+    level: 1,
+    name: Math.random() < 0.5 ? (Math.random() < 0.5 ? 'purple' : 'red') : 'blue',
+    skills: [],
+    defense: 10,
+    strength: 10,
+    health: 10,
+    speed: 10,
+    status: [],
+    magicSkill: 50,
+  })
+
+})
+
 </script>
 
 <template>
   <div class="layout">
-    <div>
-      <button @click="() => {
-        try {
-          const id = addEntity(
-            0, 0, {
-            level: 1,
-            name: Math.random() < 0.5 ? (Math.random() < 0.5 ? 'purple' : 'red') : 'blue',
-            skills: [],
-            defense: 10,
-            strength: 10,
-            health: 10,
-            speed: 10,
-            status: [],
-            magicSkill: 50,
-          })
-          console.log('successfully added: ', id)
-        } catch (err) {
-          console.log(err)
 
-        }
-      }
-        ">addGoblin</button>
-      <div class="inputs">
-        <div v-if="selectedEntity">
-          <p>{{ entities[selectedEntity].name }}</p>
-          <pre>
+    <button v-if="handleTurnsSnapshot.value === 'startGame'" @click="handleTurnsActor.send({ type: 'start' })">
+      Start
+    </button>
+
+    <div v-if="handleTurnsSnapshot.matches('playerTurn')" class="inputs">
+      <div v-if="selectedEntity">
+        <p>{{ entities[selectedEntity].name }}</p>
+        <pre>
             {{ entities[selectedEntity] }}
           </pre>
-          <button @click="wantsToMove = true">move</button>
-          <button>attack</button>
-        </div>
+        <button @click="wantsToMove = true">move</button>
+        <button>attack</button>
       </div>
     </div>
 
+
     <!-- GRID -->
-    <div class="grid" @contextmenu.prevent="deselect">
-      <div :class="{ selected: selectedCells.has(position) }" @click="() => { handlePositionClick(position) }"
-        v-for="( entityId, position ) in  grid " :key="position" :text="entityId">
+    <div class="grid"
+      @contextmenu.prevent="() => { console.log('entity.deselect'); handleTurnsActor.send({ type: 'entity.deselect' }) }">
+      <div v-for="( entityId, position ) in  grid " :key="position"
+        :class="{ selected: entityId && handleTurnsSnapshot.context.selectedId === entityId }" :text="entityId"
+        @click="() => { entityId && handleTurnsActor.send({ type: 'entity.select', entityId: entityId }) }">
         <div>
-          <img draggable="false" class="idle" v-if="entityId"
+          <img v-if="entityId" draggable="false" class="idle"
             :src="`/characters/character-${entities[entityId].name}.png`" :alt="entities[entityId].name" />
         </div>
       </div>
     </div>
   </div>
 
-
+  <div>
+    <pre>{{ handleTurnsSnapshot }}</pre>
+  </div>
 
 </template>
 

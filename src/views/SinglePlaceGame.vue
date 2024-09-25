@@ -21,11 +21,9 @@ const toggleSelectedCell = (position: Position) => {
 
 const { actorRef: handleTurnsActor, snapshot: handleTurnsSnapshot } = useMachine(handleTurnsMachine)
 
-const selectedEntity = ref<string>('')
+const selectedEntity = computed(() => handleTurnsSnapshot.value.context.selectedId)
 const currentKey = ref<keyof Entity>('health')
 const value = ref<number>(0)
-
-const currentKeys = computed(() => entityIds.value.length > 0 ? Object.keys(entities.value[selectedEntity.value]) : undefined)
 
 // needs to be an action
 const wantsToMove = ref<boolean>(false)
@@ -62,11 +60,6 @@ const handlePositionClick = (position: Position) => {
   // select target
 }
 
-const deselect = () => {
-  selectedCells.value.clear()
-  selectedEntity.value = ''
-}
-
 onMounted(() => {
   handleTurnsActor.start()
   addEntity(
@@ -93,7 +86,7 @@ onMounted(() => {
       Start
     </button>
 
-    <div v-if="handleTurnsSnapshot.matches('playerTurn')" class="inputs">
+    <div v-if="handleTurnsSnapshot.matches({ 'playerTurn': 'selected' })" class="inputs">
       <div v-if="selectedEntity">
         <p>{{ entities[selectedEntity].name }}</p>
         <pre>

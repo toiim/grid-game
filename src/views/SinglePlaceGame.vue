@@ -28,44 +28,37 @@ const value = ref<number>(0)
 // needs to be an action
 const wantsToMove = ref<boolean>(false)
 
-const handlePositionClick = (position: Position) => {
-
-  if (wantsToMove.value) {
-    const [newX, newY] = position.split('-').map(v => Number(v))
-    entities.value[selectedEntity.value].move(newX, newY)
-    deselect()
-    wantsToMove.value = false
-    return
-  }
-
-  //deselect
-  if (grid.value[position] === selectedEntity.value) {
-    deselect()
-    wantsToMove.value = false
-    return
-  }
-  // deselect actor
-  // --> remove actions --> clear selected action
-
-  // select actor if position has entity
-  if (grid.value[position]) {
-    selectedCells.value.clear()
-    selectedCells.value.add(position)
-    selectedEntity.value = grid.value[position]
-    return
-  }
-
-
-  // select action
-  // select target
-}
 
 onMounted(() => {
   handleTurnsActor.start()
   addEntity(
     0, 0, {
     level: 1,
-    name: Math.random() < 0.5 ? (Math.random() < 0.5 ? 'purple' : 'red') : 'blue',
+    name: 'blue',
+    skills: [],
+    defense: 10,
+    strength: 10,
+    health: 10,
+    speed: 10,
+    status: [],
+    magicSkill: 50,
+  })
+  addEntity(
+    2, 2, {
+    level: 1,
+    name: 'red',
+    skills: [],
+    defense: 10,
+    strength: 10,
+    health: 10,
+    speed: 10,
+    status: [],
+    magicSkill: 50,
+  })
+  addEntity(
+    4, 3, {
+    level: 1,
+    name: 'purple',
     skills: [],
     defense: 10,
     strength: 10,
@@ -112,7 +105,7 @@ onMounted(() => {
     </div>
   </div>
 
-  <div>
+  <div class="state">
     <pre>{{ handleTurnsSnapshot }}</pre>
   </div>
 
@@ -130,6 +123,10 @@ onMounted(() => {
   margin-top: 20px;
   display: grid;
   grid-template-columns: 7fr 2fr;
+}
+
+.state {
+  font-size: xx-small;
 }
 
 .inputs>* {

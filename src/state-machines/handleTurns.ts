@@ -23,8 +23,8 @@ export const handleTurnsMachine = setup({
   },
   actions: {
     updateCurrentTeam: () => {},
-    selectEntity: assign(({ event }) => ({
-      selectedId: event.entityId
+    selectEntity: assign((_, params: { entityId: EntityId }) => ({
+      selectedId: params.entityId
     })),
     deselectEntity: assign(() => ({ selectedId: undefined })),
     sendAction: () => {}
@@ -67,7 +67,14 @@ export const handleTurnsMachine = setup({
           entry: ['deselectEntity'],
           on: {
             'entity.select': {
-              actions: ['selectEntity'],
+              actions: [
+                {
+                  type: 'selectEntity',
+                  params: ({ event }) => ({
+                    entityId: event.entityId
+                  })
+                }
+              ],
               target: 'selected'
             }
           }
@@ -78,7 +85,15 @@ export const handleTurnsMachine = setup({
             showPossibleActions: {
               on: {
                 'entity.select': {
-                  actions: ['deselectEntity', 'selectEntity'],
+                  actions: [
+                    'deselectEntity',
+                    {
+                      type: 'selectEntity',
+                      params: ({ event }) => ({
+                        entityId: event.entityId
+                      })
+                    }
+                  ],
                   target: '#handleTurnsMachine.playerTurn.selected'
                 },
                 selectAction: 'showTargets'

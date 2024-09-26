@@ -4,6 +4,7 @@ import { setup, assign } from 'xstate'
 export const handleTurnsMachine = setup({
   types: {
     context: {} as {
+      turn: 'good' | 'bad' | undefined
       selectedId: EntityId | undefined
       action: {
         type: 'move' | 'attack' | undefined
@@ -12,14 +13,14 @@ export const handleTurnsMachine = setup({
       }
     },
     events: {} as
-      | { type: 'endTurn' }
+      | { type: 'turn.end' }
       | { type: 'entity.select'; entityId: EntityId }
       | { type: 'entity.deselect' }
-      | { type: 'selectTarget' }
-      | { type: 'selectAction' }
-      | { type: 'deselectAction' }
-      | { type: 'createNewGame' }
-      | { type: 'start' }
+      | { type: 'target.select' }
+      | { type: 'action.select' }
+      | { type: 'action.deselect' }
+      | { type: 'game.create' }
+      | { type: 'game.start' }
   },
   actions: {
     updateCurrentTeam: () => {},
@@ -38,6 +39,7 @@ export const handleTurnsMachine = setup({
   description: `complete game loop for multiple teams`,
   initial: 'startGame',
   context: {
+    turn: undefined,
     selectedId: undefined,
     action: {
       type: undefined,
@@ -49,7 +51,7 @@ export const handleTurnsMachine = setup({
     playerTurn: {
       id: 'playerTurn',
       on: {
-        endTurn: [
+        'turn.end': [
           {
             target: 'endGame',
             guard: 'gameOver'
@@ -96,19 +98,19 @@ export const handleTurnsMachine = setup({
                   ],
                   target: '#handleTurnsMachine.playerTurn.selected'
                 },
-                selectAction: 'showTargets'
+                'action.select': 'showTargets'
               }
             },
 
             showTargets: {
               on: {
-                selectTarget: {
+                'target.select': {
                   target: '#handleTurnsMachine.animateAction',
                   actions: 'sendAction',
                   reenter: true
                 },
 
-                deselectAction: {
+                'action.deselect': {
                   target: 'showPossibleActions',
                   reenter: true
                 }
@@ -130,13 +132,13 @@ export const handleTurnsMachine = setup({
 
     endGame: {
       on: {
-        createNewGame: 'startGame'
+        'game.create': 'startGame'
       }
     },
 
     startGame: {
       on: {
-        start: {
+        'game.start': {
           target: 'playerTurn',
           reenter: true
         }

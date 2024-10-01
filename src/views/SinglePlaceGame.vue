@@ -1,33 +1,17 @@
 <script lang="ts" setup>
-import { computed, onMounted, ref } from 'vue'
-import { useMachine } from '@xstate/vue'
-import { createLevel, type Position } from '@/stores/single-entity-level'
+import { computed, onMounted } from 'vue'
+import { useMachine, useSelector } from '@xstate/vue'
+import { createLevel } from '@/stores/single-entity-level'
 import { gameMachine } from '@/state-machines/gameMachine'
-import type { Entity, EntityId } from '@/stores/entity';
 
 const gridX = 5;
 const gridY = 5
 
 const { grid, entities, addEntity, entityIds, updateEntity } = createLevel(gridX, gridY)
 
-const selectedCells = ref<Set<Position>>(new Set())
-const toggleSelectedCell = (position: Position) => {
-  if (selectedCells.value.has(position)) {
-    selectedCells.value.delete(position)
-  } else {
-    selectedCells.value.add(position)
-  }
-}
-
 const { actorRef: gameActor, snapshot: gameSnapshot } = useMachine(gameMachine)
 
-const selectedEntity = computed(() => gameSnapshot.value.context.selectedId)
-const currentKey = ref<keyof Entity>('health')
-const value = ref<number>(0)
-
-// needs to be an action
-const wantsToMove = ref<boolean>(false)
-
+// const selectedEntity = computed(() => gameSnapshot.value.context.selectedId)
 
 onMounted(() => {
   gameActor.start()
@@ -70,6 +54,20 @@ onMounted(() => {
 
 })
 
+const turnActor = computed(() => {
+  if (gameSnapshot.value.children['good-turn']) {
+    const actorRef = useSelector(gameActor, (s) => s.children['good-turn']);
+    const snapshot = useSelector(actorRef, (s) => s);
+    return { actorRef: actorRef.value, snapshot: snapshot.value }
+  }
+  if (gameSnapshot.value.children['good-turn']) {
+    const actorRef = useSelector(gameActor, (s) => s.children['good-turn']);
+    const snapshot = useSelector(actorRef, (s) => s);
+    return { actorRef: actorRef.value, snapshot: snapshot.value }
+  }
+  return undefined
+})
+
 </script>
 
 <template>
@@ -79,24 +77,16 @@ onMounted(() => {
       Start
     </button>
 
-    <div v-if="gameSnapshot.matches('turn')" class="inputs">
-      <div v-if="selectedEntity">
-        <p>{{ entities[selectedEntity].name }}</p>
-        <pre>
-            {{ entities[selectedEntity] }}
-          </pre>
-        <button @click="wantsToMove = true">move</button>
-        <button>attack</button>
-      </div>
+    <div v-if="turnActor?.snapshot?.matches('teamTurn')" class="inputs">
+
     </div>
 
 
     <!-- GRID -->
-    <div class="grid"
-      @contextmenu.prevent="() => { console.log('entity.deselect'); gameActor.send({ type: 'entity.deselect' }) }">
-      <div v-for="( entityId, position ) in  grid " :key="position"
-        :class="{ selected: entityId && gameSnapshot.context.selectedId === entityId }" :text="entityId"
-        @click="() => { entityId && gameActor.send({ type: 'entity.select', entityId: entityId }) }">
+    <div class="grid" @contextmenu.prevent="() => { turnActor?.actorRef?.send({ type: 'entity.deselect' }) }">
+      <div v-for="( entityId, position ) in grid " :key="position"
+        :class="{ selected: entityId && turnActor?.snapshot?.context.selectedId === entityId }" :text="entityId"
+        @click="() => { entityId && turnActor?.actorRef?.send({ type: 'entity.select', entityId: entityId }); }">
         <div>
           <img v-if="entityId" draggable="false" class="idle"
             :src="`/characters/character-${entities[entityId].name}.png`" :alt="entities[entityId].name" />
@@ -109,9 +99,22 @@ onMounted(() => {
     <pre>{{ gameSnapshot }}</pre>
   </div>
 
+  <div class="state">
+    <pre>{{ turnActor?.snapshot }}</pre>
+  </div>
 </template>
 
 <style scoped>
+.turn {}
+
+.good-turn {
+  background-color: lightblue;
+}
+
+.bad-turn {
+  background-color: lightcoral;
+}
+
 .selectable-entity {
   border: 1px solid silver;
   border-radius: 2px;

@@ -6,11 +6,11 @@ export const turnMachine = setup({
   types: {
     context: {} as {
       teamId: string
-      selectedId: EntityId | undefined
+      selectedId?: EntityId
       action: {
-        type: 'attack' | 'move' | undefined
-        actor: EntityId | undefined
-        target: Position | EntityId | undefined
+        type?: 'attack' | 'move'
+        actor?: EntityId
+        target?: Position | EntityId
       }
     },
     events: {} as
@@ -25,17 +25,16 @@ export const turnMachine = setup({
     }
   },
   actions: {
-    deselectEntity: assign(({ context, event }, params) => ({
-      selectedId: undefined
-    })),
-    selectEntity: assign(({ context, event }, params: { entityId: EntityId }) => ({
-      selectedId: params.entityId
-    }))
+    deselectEntity: assign({ selectedId: undefined }),
+    selectEntity: assign({
+      selectedId: (_, params: EntityId) => params
+    })
   },
   guards: {
     gameOver: ({ context, event }) => false
   }
 }).createMachine({
+  /** @xstate-layout N4IgpgJg5mDOIC5QBcCuAnAdgWQIYGMALAS0zADpkxcBbAFQ03NU1jABsx8qIBiMTMmLIAnuTaduAbQAMAXUSgADgHtYw4isyKQAD0QA2AIzkjAFhkAmGQHZbBmzYDMATksAaECMRHLl8o4yRkbOZn5mZgCsTgC+MZ5oWHhEpBRUtAxY4hxcPPyCwmIQcDnS8jqq6kJaOvoIRlYAHAFGjQYuNpYuka2NRp7eCGFOAS7dLjJmTgbGwWZxCYzJJGSU1PSM2ZI85ATVmADKpfv5QqJbubIKSCCVGjU3dUYzphFj5k5tRk6RHl6I02aZjGzkcUyM0SiCxAiRwBBWaXWmSYElykF23E0h2OWN4eyxFzK12Uanu2keiC6ZlMlmBEz6kycZhsA0QkSmLQMlnZwRcBjMBka0Nhy1Sawym1R3HRyFw6BgyCO21x+K05GKUuQVwqpP2tUpLmpvjpMgZU2ZrKGLhGlmelgMMlN7VNzmFS3hYvSGyymplcoVStyuNl8rAyEJWvKNzueopCAMP1eMgd9uBxjCluizW+XQhYUCrjdSQ9qy9yIj6NVmAAgphiDRcCdYeQBBBtdHdVj9fVIsnyH1ad8ZEzImMnJmIuR2d1GjYol1GlYi3CUqWkZLjpXMVpa-XG8HNq2pEZibdOw9QE8gs0bK12p1ur1+v8EE5nOQuuN+cPZ05bHF4hATAVA1HQRRLMAdSqLs4wAWiZftRxsNw3CcPwHUaS1YL5AIFxcBpXDfCJImXUU1wlLAoLJbtviTaw7BsBxnHwlwsJcD8F0aaI-2tRo+JIwDwNXREKKYFhfQgKjY0vHxuRscg0KsJw3z5PjZ0tH5-GQvlkwfMxzFdQT3WE8VvRRTdJI7aCLz0RA53IR1HKcpzxxfSxF3IMYOnc203C6BxSIg0zywkjF9kDbdyRJayots+o-Ac5ykuHTNPnIBN3L5QFaQiQKTLLDdtj9UNFRxGyYxgmShgcUwkKUlw+lvAxLQiGR0uZOcZEiLi+UiATFmLfL1x9CywqxXcG2ks8Yu7ZC2sFOcDG6gV3mal8s3StDGiywUcvmIzBoRch8BUGglE4KgpMquLIhZF82kiD87TMPpfk+YEAJiIA */
   context: ({ input }) => ({
     teamId: input.teamId,
     selectedId: undefined,
@@ -56,10 +55,10 @@ export const turnMachine = setup({
           on: {
             'entity.select': {
               target: 'selected',
-              actions: ({ event }) => ({
+              actions: {
                 type: 'selectEntity',
-                params: { entityId: event.entityId }
-              })
+                params: ({ event }) => event.entityId
+              }
             }
           },
           entry: {
@@ -81,10 +80,10 @@ export const turnMachine = setup({
                     {
                       type: 'deselectEntity'
                     },
-                    ({ event }) => ({
+                    {
                       type: 'selectEntity',
-                      params: { entityId: event.entityId }
-                    })
+                      params: ({ event }) => event.entityId
+                    }
                   ]
                 },
                 'action.select': {

@@ -42,6 +42,7 @@ export const gameMachine = setup({
       states: {
         goodTeam: {
           invoke: {
+            id: 'good-turn',
             src: 'turnMachine',
             input: { teamId: 'good' }
           },
@@ -50,6 +51,7 @@ export const gameMachine = setup({
           }
         },
         badTeam: {
+          id: 'bad-turn',
           src: 'turnMachine',
           input: { teamId: 'bad' },
           on: {

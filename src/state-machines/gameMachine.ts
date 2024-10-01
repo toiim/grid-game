@@ -1,4 +1,4 @@
-import { setup, assign, spawnChild } from 'xstate'
+import { setup } from 'xstate'
 import { turnMachine } from './turnMachine'
 export const gameMachine = setup({
   types: {
@@ -18,15 +18,6 @@ export const gameMachine = setup({
   id: 'gameMachine',
   description: `complete game loop for multiple teams`,
   initial: 'gameOpening',
-  context: {
-    turn: undefined,
-    selectedId: undefined,
-    action: {
-      type: undefined,
-      actor: undefined,
-      target: undefined
-    }
-  },
   states: {
     gameOpening: {
       on: {

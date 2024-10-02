@@ -2,6 +2,11 @@ import type { EntityId } from '@/stores/entity'
 import type { Position } from '@/stores/level'
 import { setup, assign } from 'xstate'
 
+type Action = {
+  type?: 'attack' | 'move'
+  actor?: EntityId
+  target?: Position | EntityId
+}
 export const turnMachine = setup({
   types: {
     context: {} as {
@@ -15,9 +20,9 @@ export const turnMachine = setup({
     },
     events: {} as
       | { type: 'turn.end' }
-      | { type: 'action.select' }
+      | { type: 'action.select'; action: 'attack' | 'move' }
       | { type: 'entity.select'; entityId: EntityId }
-      | { type: 'target.select' }
+      | { type: 'target.select'; target: EntityId | Position }
       | { type: 'action.deselect' }
       | { type: 'entity.deselect' },
     input: {} as {
@@ -28,6 +33,24 @@ export const turnMachine = setup({
     deselectEntity: assign({ selectedId: undefined }),
     selectEntity: assign({
       selectedId: (_, params: EntityId) => params
+    }),
+    selectActionType: assign({
+      action: ({ context }, params: 'attack' | 'move') => ({
+        ...context.action,
+        type: params
+      })
+    }),
+    selectActionTarget: assign({
+      action: ({ context }, params: EntityId | Position) => ({
+        ...context.action,
+        target: params
+      })
+    }),
+    removeAction: assign({
+      action: {}
+    }),
+    addAction: assign({
+      action: (_, params: Action) => params
     })
   },
   guards: {
@@ -87,17 +110,28 @@ export const turnMachine = setup({
                   ]
                 },
                 'action.select': {
-                  target: 'targetSelection'
+                  target: 'targetSelection',
+                  actions: {
+                    type: 'selectActionType',
+                    params: ({ event }) => event.action
+                  }
                 }
               }
             },
             targetSelection: {
               on: {
                 'action.deselect': {
-                  target: 'actionSelection'
+                  target: 'actionSelection',
+                  actions: {
+                    type: 'removeAction'
+                  }
                 },
                 'target.select': {
-                  target: 'actionAnimation'
+                  target: 'actionAnimation',
+                  actions: {
+                    type: 'selectActionTarget',
+                    params: ({ event }) => event.target
+                  }
                 }
               }
             },

@@ -89,17 +89,19 @@ watch(turnSnapshot, (currentSnapshot) => {
 
 <template>
   <div class="layout">
-    <button v-if="gameSnapshot.value === 'gameOpening'" @click="gameActor.send({ type: 'game.start' })">
-      Start
-    </button>
+    <div>
+      <button v-if="gameSnapshot.value === 'gameOpening'" @click="gameActor.send({ type: 'game.start' })">
+        Start
+      </button>
 
-    <!-- <div v-if="turnActor?.snapshot?.matches('teamTurn')" class="inputs"> -->
-    <div v-if="turnActor?.snapshot?.matches({ 'teamTurn': 'selected' })" class="inputs">
-      <h2>{{ turnContext?.selectedId && entities[turnContext.selectedId].name }}</h2>
-      <button @click="() => { turnActorRef?.send({ type: 'action.select', action: 'move' }) }">Move ➜</button>
-      <button @click="() => { turnActorRef?.send({ type: 'action.select', action: 'attack' }) }">Attack ⚔️</button>
+      <h2 v-if="turnSnapshot?.matches('teamTurn')">{{ turnContext?.teamId.toUpperCase() }} Team's Turn</h2>
+      <!-- <div v-if="turnActor?.snapshot?.matches('teamTurn')" class="inputs"> -->
+      <div v-if="turnSnapshot?.matches({ 'teamTurn': 'selected' })" class="inputs">
+        <h4>{{ turnContext?.selectedId && entities[turnContext.selectedId].name }}</h4>
+        <button @click="() => { turnActorRef?.send({ type: 'action.select', action: 'move' }) }">Move ➜</button>
+        <button @click="() => { turnActorRef?.send({ type: 'action.select', action: 'attack' }) }">Attack ⚔️</button>
+      </div>
     </div>
-
     <!-- GRID -->
     <div class="grid" @contextmenu.prevent="() => { turnActorRef?.send({ type: 'entity.deselect' }) }">
       <div v-for="( entityId, position ) in grid " :key="position"
@@ -156,8 +158,8 @@ watch(turnSnapshot, (currentSnapshot) => {
   font-size: xx-small;
 }
 
-.inputs>* {
-  font-size: xx-small;
+.inputs {
+  display: grid;
 }
 
 .text {

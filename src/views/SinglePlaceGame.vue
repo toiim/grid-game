@@ -11,8 +11,6 @@ const { grid, entities, addEntity, entityIds, updateEntity } = createLevel(gridX
 
 const { actorRef: gameActor, snapshot: gameSnapshot } = useMachine(gameMachine)
 
-// const selectedEntity = computed(() => gameSnapshot.value.context.selectedId)
-
 onMounted(() => {
   gameActor.start()
   addEntity(
@@ -90,9 +88,13 @@ const turnContext = computed(() => turnActor.value?.snapshot?.context)
     <!-- GRID -->
     <div class="grid" @contextmenu.prevent="() => { turnActorRef?.send({ type: 'entity.deselect' }) }">
       <div v-for="( entityId, position ) in grid " :key="position"
-        :class="{ selected: entityId && turnActor?.snapshot?.context.selectedId === entityId }" :text="entityId" @click="() => {
-          entityId && turnActor?.actorRef?.send({ type: 'entity.select', entityId: entityId });
-          turnActor?.snapshot?.matches({ teamTurn: { 'selected': 'targetSelection' } }) && turnActor.actorRef?.send({ type: 'target.select' })
+        :class="{ selected: entityId && turnContext?.selectedId === entityId }" :text="entityId" @click="() => {
+
+          // 
+          turnSnapshot?.matches({ 'teamTurn': 'unselected' }) && entityId && turnActorRef?.send({ type: 'entity.select', entityId: entityId });
+          //
+          turnSnapshot?.matches({ teamTurn: { 'selected': 'targetSelection' } }) && turnActorRef?.send({ type: 'target.select' })
+
         }">
         <div>
           <img v-if="entityId" draggable="false" class="idle"
@@ -107,7 +109,7 @@ const turnContext = computed(() => turnActor.value?.snapshot?.context)
   </div>
 
   <div class="state">
-    <pre>{{ turnActor?.snapshot }}</pre>
+    <pre>{{ turnSnapshot }}</pre>
   </div>
 </template>
 
@@ -211,7 +213,7 @@ const turnContext = computed(() => turnActor.value?.snapshot?.context)
 }
 
 div.selected {
-  border: 1px dashed rgba(255, 255, 255, 0.9);
+  border: 1px dashed rgba(255,255, 255, 0.9);
   color: white;
 }
 </style>

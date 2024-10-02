@@ -68,25 +68,32 @@ const turnActor = computed(() => {
   return undefined
 })
 
+const turnActorRef = computed(() => turnActor.value?.actorRef)
+const turnSnapshot = computed(() => turnActor.value?.snapshot)
+const turnContext = computed(() => turnActor.value?.snapshot?.context)
+
 </script>
 
 <template>
   <div class="layout">
-
     <button v-if="gameSnapshot.value === 'gameOpening'" @click="gameActor.send({ type: 'game.start' })">
       Start
     </button>
 
-    <div v-if="turnActor?.snapshot?.matches('teamTurn')" class="inputs">
-
+    <!-- <div v-if="turnActor?.snapshot?.matches('teamTurn')" class="inputs"> -->
+    <div v-if="turnActor?.snapshot?.matches({ 'teamTurn': 'selected' })" class="inputs">
+      <h2>{{ turnContext?.selectedId && entities[turnContext.selectedId].name }}</h2>
+      <button @click="() => { turnActorRef?.send({ 'type': 'action.select' }) }">Move ➜</button>
+      <button @click="() => { turnActorRef?.send({ 'type': 'action.select' }) }">Attack ⚔️</button>
     </div>
 
-
     <!-- GRID -->
-    <div class="grid" @contextmenu.prevent="() => { turnActor?.actorRef?.send({ type: 'entity.deselect' }) }">
+    <div class="grid" @contextmenu.prevent="() => { turnActorRef?.send({ type: 'entity.deselect' }) }">
       <div v-for="( entityId, position ) in grid " :key="position"
-        :class="{ selected: entityId && turnActor?.snapshot?.context.selectedId === entityId }" :text="entityId"
-        @click="() => { entityId && turnActor?.actorRef?.send({ type: 'entity.select', entityId: entityId }); }">
+        :class="{ selected: entityId && turnActor?.snapshot?.context.selectedId === entityId }" :text="entityId" @click="() => {
+          entityId && turnActor?.actorRef?.send({ type: 'entity.select', entityId: entityId });
+          turnActor?.snapshot?.matches({ teamTurn: { 'selected': 'targetSelection' } }) && turnActor.actorRef?.send({ type: 'target.select' })
+        }">
         <div>
           <img v-if="entityId" draggable="false" class="idle"
             :src="`/characters/character-${entities[entityId].name}.png`" :alt="entities[entityId].name" />

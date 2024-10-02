@@ -3,53 +3,18 @@ import { computed, onMounted, watch } from 'vue'
 import { useMachine, useSelector } from '@xstate/vue'
 import { createLevel } from '@/stores/single-entity-level'
 import { gameMachine } from '@/state-machines/gameMachine'
+import { level001 } from '@/assets/level-configs/level-001'
 
 const gridX = 5;
 const gridY = 5
 
-const { grid, entities, addEntity, entityIds, updateEntity } = createLevel(gridX, gridY)
+const { grid, entities, addEntity, entityIds, updateEntity, moveEntity } = createLevel(level001.width, level001.height)
 
 const { actorRef: gameActor, snapshot: gameSnapshot } = useMachine(gameMachine)
 
 onMounted(() => {
   gameActor.start()
-  addEntity(
-    0, 0, {
-    level: 1,
-    name: 'blue',
-    skills: [],
-    defense: 10,
-    strength: 10,
-    health: 10,
-    speed: 10,
-    status: [],
-    magicSkill: 50,
-  })
-  addEntity(
-    2, 2, {
-    level: 1,
-    name: 'red',
-    skills: [],
-    defense: 10,
-    strength: 10,
-    health: 10,
-    speed: 10,
-    status: [],
-    magicSkill: 50,
-  })
-  addEntity(
-    4, 3, {
-    level: 1,
-    name: 'purple',
-    skills: [],
-    defense: 10,
-    strength: 10,
-    health: 10,
-    speed: 10,
-    status: [],
-    magicSkill: 50,
-  })
-
+  level001.entities.forEach(entityConfig => addEntity(entityConfig.x, entityConfig.y, entityConfig.entity))
 })
 
 const turnActor = computed(() => {
@@ -75,8 +40,6 @@ watch(turnSnapshot, (currentSnapshot) => {
   if (!turnSnapshot.value?.context.selectedId) return
   if (currentSnapshot?.matches({ 'teamTurn': { 'selected': 'actionAnimation' } })) {
     if (currentSnapshot.context.action.type === 'move') {
-      const [x, y] = currentSnapshot.context.action.target?.split('-')
-      entities.value[turnSnapshot.value?.context.selectedId].move(x, y)
       turnActorRef.value?.send({ type: 'turn.end' })
     }
     if (currentSnapshot.context.action.type === 'attack') {
@@ -104,15 +67,25 @@ watch(turnSnapshot, (currentSnapshot) => {
     </div>
     <!-- GRID -->
     <div class="grid" @contextmenu.prevent="() => { turnActorRef?.send({ type: 'entity.deselect' }) }">
-      <div v-for="( entityId, position ) in grid " :key="position"
-        :class="{ selected: entityId && turnContext?.selectedId === entityId }" :text="entityId" @click="() => {
+      <div v-for="( entityId, position ) in grid " :key="position" :class="{
+        selected: entityId && turnContext?.selectedId === entityId,
+        selectable: turnSnapshot?.matches({ 'teamTurn': 'unselected' }) && turnContext && entityId && entities[entityId].teamId === turnContext.teamId
+      }" :text="entityId" @click="() => {
 
-          // 
-          turnSnapshot?.matches({ 'teamTurn': 'unselected' }) && entityId && turnActorRef?.send({ type: 'entity.select', entityId: entityId });
-          //
-          turnSnapshot?.matches({ teamTurn: { 'selected': 'targetSelection' } }) && turnActorRef?.send({ type: 'target.select', target: position })
+        // if in unselected state and occupied, send selection event
+        if (turnSnapshot?.matches({ 'teamTurn': 'unselected' }) && entityId) {
+          turnActorRef?.send({ type: 'entity.select', entityId: entityId });
+        }
+        // TODO: Check if target is valid target (no friendly fire, no moving to occupied positions, no attacking empty positions, etc.)
 
-        }">
+        // if in targetSelection state and there's a selectedId send target selection event
+        if (turnSnapshot?.matches({ teamTurn: { 'selected': 'targetSelection' } }) && turnContext?.selectedId) {
+          turnActorRef?.send({ type: 'target.select', target: position })
+          const [newX, newY] = position.split('-')
+          moveEntity(turnContext?.selectedId, Number(newX), Number(newY))
+        }
+
+      }">
         <div>
           <img v-if="entityId" draggable="false" class="idle"
             :src="`/characters/character-${entities[entityId].name}.png`" :alt="entities[entityId].name" />
@@ -132,21 +105,6 @@ watch(turnSnapshot, (currentSnapshot) => {
 
 <style scoped>
 .turn {}
-
-.good-turn {
-  background-color: lightblue;
-}
-
-.bad-turn {
-  background-color: lightcoral;
-}
-
-.selectable-entity {
-  border: 1px solid silver;
-  border-radius: 2px;
-  margin-bottom: 1px;
-  padding: 1px;
-}
 
 .layout {
   margin-top: 20px;
@@ -229,8 +187,23 @@ watch(turnSnapshot, (currentSnapshot) => {
   border: 1px dotted rgba(255, 255, 255, 0.5);
 }
 
+div.selectable {
+  border-style: solid;
+  border-width: 2px;
+  border-top-color: rgb(124, 225, 126, 0.9);
+  border-left-color: rgb(67, 123, 65, 0.9);
+  border-right-color: rgb(10, 66, 9, 0.9);
+  border-bottom-color: rgb(10, 66, 9, 0.9);
+  border-radius: 5px;
+}
+
 div.selected {
-  border: 1px dashed rgba(255, 255, 255, 0.9);
-  color: white;
+  border-style: solid;
+  border-width: 3px;
+  border-right-color: rgb(124, 225, 126, 0.9);
+  border-bottom-color: rgb(67, 123, 65, 0.9);
+  border-top-color: rgb(10, 66, 9, 0.9);
+  border-left-color: rgb(10, 66, 9, 0.9);
+  border-radius: 5px;
 }
 </style>

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 import { useMachine, useSelector } from '@xstate/vue'
 import { createLevel } from '@/stores/single-entity-level'
 import { gameMachine } from '@/state-machines/gameMachine'
@@ -58,8 +58,8 @@ const turnActor = computed(() => {
     const snapshot = useSelector(actorRef, (s) => s);
     return { actorRef: actorRef.value, snapshot: snapshot.value }
   }
-  if (gameSnapshot.value.children['good-turn']) {
-    const actorRef = useSelector(gameActor, (s) => s.children['good-turn']);
+  if (gameSnapshot.value.children['bad-turn']) {
+    const actorRef = useSelector(gameActor, (s) => s.children['bad-turn']);
     const snapshot = useSelector(actorRef, (s) => s);
     return { actorRef: actorRef.value, snapshot: snapshot.value }
   }
@@ -69,6 +69,21 @@ const turnActor = computed(() => {
 const turnActorRef = computed(() => turnActor.value?.actorRef)
 const turnSnapshot = computed(() => turnActor.value?.snapshot)
 const turnContext = computed(() => turnActor.value?.snapshot?.context)
+
+watch(turnSnapshot, (currentSnapshot) => {
+  // ready to trigger animation
+  if (!turnSnapshot.value?.context.selectedId) return
+  if (currentSnapshot?.matches({ 'teamTurn': { 'selected': 'actionAnimation' } })) {
+    if (currentSnapshot.context.action.type === 'move') {
+      const [x, y] = currentSnapshot.context.action.target?.split('-')
+      entities.value[turnSnapshot.value?.context.selectedId].move(x, y)
+      turnActorRef.value?.send({ type: 'turn.end' })
+    }
+    if (currentSnapshot.context.action.type === 'attack') {
+
+    }
+  }
+})
 
 </script>
 
@@ -81,8 +96,8 @@ const turnContext = computed(() => turnActor.value?.snapshot?.context)
     <!-- <div v-if="turnActor?.snapshot?.matches('teamTurn')" class="inputs"> -->
     <div v-if="turnActor?.snapshot?.matches({ 'teamTurn': 'selected' })" class="inputs">
       <h2>{{ turnContext?.selectedId && entities[turnContext.selectedId].name }}</h2>
-      <button @click="() => { turnActorRef?.send({ 'type': 'action.select' }) }">Move ➜</button>
-      <button @click="() => { turnActorRef?.send({ 'type': 'action.select' }) }">Attack ⚔️</button>
+      <button @click="() => { turnActorRef?.send({ type: 'action.select', action: 'move' }) }">Move ➜</button>
+      <button @click="() => { turnActorRef?.send({ type: 'action.select', action: 'attack' }) }">Attack ⚔️</button>
     </div>
 
     <!-- GRID -->
@@ -93,7 +108,7 @@ const turnContext = computed(() => turnActor.value?.snapshot?.context)
           // 
           turnSnapshot?.matches({ 'teamTurn': 'unselected' }) && entityId && turnActorRef?.send({ type: 'entity.select', entityId: entityId });
           //
-          turnSnapshot?.matches({ teamTurn: { 'selected': 'targetSelection' } }) && turnActorRef?.send({ type: 'target.select' })
+          turnSnapshot?.matches({ teamTurn: { 'selected': 'targetSelection' } }) && turnActorRef?.send({ type: 'target.select', target: position })
 
         }">
         <div>
@@ -213,7 +228,7 @@ const turnContext = computed(() => turnActor.value?.snapshot?.context)
 }
 
 div.selected {
-  border: 1px dashed rgba(255,255, 255, 0.9);
+  border: 1px dashed rgba(255, 255, 255, 0.9);
   color: white;
 }
 </style>

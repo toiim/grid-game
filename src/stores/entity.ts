@@ -5,7 +5,7 @@ import type { Status } from './status'
 export type EntityId = string
 
 export type BaseEntity = {
-  team: 'good' | 'bad'
+  teamId: 'good' | 'bad'
   name?: string
   health: number
   strength: number

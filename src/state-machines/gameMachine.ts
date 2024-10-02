@@ -35,18 +35,20 @@ export const gameMachine = setup({
           invoke: {
             id: 'good-turn',
             src: 'turnMachine',
-            input: { teamId: 'good' }
-          },
-          on: {
-            'turn.end': 'badTeam'
+            input: { teamId: 'good' },
+            onDone: {
+              target: 'badTeam'
+            }
           }
         },
         badTeam: {
-          id: 'bad-turn',
-          src: 'turnMachine',
-          input: { teamId: 'bad' },
-          on: {
-            'turn.end': 'goodTeam'
+          invoke: {
+            id: 'bad-turn',
+            src: 'turnMachine',
+            input: { teamId: 'bad' },
+            onDone: {
+              target: 'goodTeam'
+            }
           }
         }
       }

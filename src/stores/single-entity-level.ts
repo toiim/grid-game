@@ -1,6 +1,8 @@
 import { ref, computed } from 'vue'
 import type { EntityId, Entity, BaseEntity } from './entity'
 
+// TODO: Alter all x,y number parameter to simply be {x}-{y} strings.
+
 /** Position is represented as a string composed of {x}-{y} */
 export type Position = string
 

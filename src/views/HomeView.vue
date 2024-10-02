@@ -52,9 +52,7 @@ onMounted(() => {
             {{ event }}
           </option>
         </select>
-        <button @click="() => { childActorRef?.send({ type: subCommand }) }">send
-          to
-          submachine</button>
+        <button @click="() => { childActorRef?.send({ type: subCommand }) }">send to submachine</button>
       </div>
     </div>
   </main>

@@ -10,7 +10,7 @@ type Action = {
 export const turnMachine = setup({
   types: {
     context: {} as {
-      teamId: string
+      teamId: 'good' | 'bad'
       selectedId?: EntityId
       action: {
         type?: 'attack' | 'move'
@@ -26,7 +26,7 @@ export const turnMachine = setup({
       | { type: 'action.deselect' }
       | { type: 'entity.deselect' },
     input: {} as {
-      teamId: EntityId
+      teamId: 'good' | 'bad'
     }
   },
   actions: {

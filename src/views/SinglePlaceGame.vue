@@ -35,19 +35,6 @@ const turnActorRef = computed(() => turnActor.value?.actorRef)
 const turnSnapshot = computed(() => turnActor.value?.snapshot)
 const turnContext = computed(() => turnActor.value?.snapshot?.context)
 
-watch(turnSnapshot, (currentSnapshot) => {
-  // ready to trigger animation
-  if (!turnSnapshot.value?.context.selectedId) return
-  if (currentSnapshot?.matches({ 'teamTurn': { 'selected': 'actionAnimation' } })) {
-    if (currentSnapshot.context.action.type === 'move') {
-      turnActorRef.value?.send({ type: 'turn.end' })
-    }
-    if (currentSnapshot.context.action.type === 'attack') {
-
-    }
-  }
-})
-
 </script>
 
 <template>
@@ -64,6 +51,8 @@ watch(turnSnapshot, (currentSnapshot) => {
         <button @click="() => { turnActorRef?.send({ type: 'action.select', action: 'move' }) }">Move ➜</button>
         <button @click="() => { turnActorRef?.send({ type: 'action.select', action: 'attack' }) }">Attack ⚔️</button>
       </div>
+      <button v-if="turnSnapshot?.matches('teamTurn')" @click="turnActorRef?.send({ type: 'turn.end' })">End
+        Turn</button>
     </div>
     <!-- GRID -->
     <div class="grid" @contextmenu.prevent="() => { turnActorRef?.send({ type: 'entity.deselect' }) }">
@@ -80,9 +69,9 @@ watch(turnSnapshot, (currentSnapshot) => {
 
         // if in targetSelection state and there's a selectedId send target selection event
         if (turnSnapshot?.matches({ teamTurn: { 'selected': 'targetSelection' } }) && turnContext?.selectedId) {
-          turnActorRef?.send({ type: 'target.select', target: position })
           const [newX, newY] = position.split('-')
           moveEntity(turnContext?.selectedId, Number(newX), Number(newY))
+          turnActorRef?.send({ type: 'target.select', target: position })
         }
 
       }">
@@ -199,11 +188,11 @@ div.selectable {
 
 div.selected {
   border-style: solid;
-  border-width: 3px;
-  border-right-color: rgb(124, 225, 126, 0.9);
-  border-bottom-color: rgb(67, 123, 65, 0.9);
-  border-top-color: rgb(10, 66, 9, 0.9);
-  border-left-color: rgb(10, 66, 9, 0.9);
+  border-width: 2px;
+  border-top-color: rgba(114, 87, 85, 0.9);
+  border-left-color: rgba(66, 52, 46, 0.9);
+  border-right-color: rgba(230, 209, 188, 0.9);
+  border-bottom-color: rgba(173, 149, 136, 0.9);
   border-radius: 5px;
 }
 </style>

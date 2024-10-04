@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { computed, onMounted, watch } from 'vue'
 import { useMachine, useSelector } from '@xstate/vue'
-import { createLevel } from '@/stores/single-entity-level'
+import { createLevel, type Position } from '@/stores/single-entity-level'
 import { gameMachine } from '@/state-machines/gameMachine'
 import { level001 } from '@/assets/level-configs/level-001'
 
@@ -35,6 +35,24 @@ const turnActorRef = computed(() => turnActor.value?.actorRef)
 const turnSnapshot = computed(() => turnActor.value?.snapshot)
 const turnContext = computed(() => turnActor.value?.snapshot?.context)
 
+const selectablePositions = computed<Set<Position>>(() => {
+  const range = 1
+
+  const selectedId = turnContext.value?.selectedId
+  const actionType = turnContext.value?.action.type
+  if (!selectedId || actionType !== 'move') return new Set<Position>()
+  const initialPosition = entities.value[selectedId].position
+  const [initialX, initialY] = initialPosition.split('-').map((char) => Number(char))
+  const surroundingPositions = new Set<Position>()
+  for (let x = -range; x < range + 1; x++) {
+    for (let y = -range; y < range + 1; y++) {
+      surroundingPositions.add(`${initialX + x}-${initialY + y}`)
+    }
+  }
+  surroundingPositions.delete(initialPosition)
+  return surroundingPositions
+})
+
 </script>
 
 <template>
@@ -57,6 +75,7 @@ const turnContext = computed(() => turnActor.value?.snapshot?.context)
     <!-- GRID -->
     <div class="grid" @contextmenu.prevent="() => { turnActorRef?.send({ type: 'entity.deselect' }) }">
       <div v-for="( entityId, position ) in grid " :key="position" :class="{
+        'can-move-to': selectablePositions.has(position),
         selected: entityId && turnContext?.selectedId === entityId,
         selectable: turnSnapshot?.matches({ 'teamTurn': 'unselected' }) && turnContext && entityId && entities[entityId].teamId === turnContext.teamId
       }" :text="entityId" @click="() => {
@@ -117,6 +136,20 @@ const turnContext = computed(() => turnActor.value?.snapshot?.context)
   color: gray;
   max-height: 250px;
   overflow-y: scroll;
+}
+
+.can-move-to {
+  animation: gradient 1s ease alternate infinite;
+}
+
+@keyframes gradient {
+  0% {
+    background-color: rgba(0, 191, 255, 0.5);
+  }
+
+  100% {
+    background-color: rgba(0, 98, 255, 0.7);
+  }
 }
 
 .grid {

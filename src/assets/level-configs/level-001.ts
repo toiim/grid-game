@@ -29,6 +29,22 @@ export const level001: LevelConfig = {
       }
     },
     {
+      x: 1,
+      y: 1,
+      entity: {
+        teamId: 'bad',
+        level: 1,
+        name: 'white',
+        skills: [],
+        defense: 10,
+        strength: 10,
+        health: 10,
+        speed: 10,
+        status: [],
+        magicSkill: 50
+      }
+    },
+    {
       x: 2,
       y: 2,
       entity: {

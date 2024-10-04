@@ -49,6 +49,12 @@ const selectablePositions = computed<Set<Position>>(() => {
       surroundingPositions.add(`${initialX + x}-${initialY + y}`)
     }
   }
+  // for move only
+  surroundingPositions.forEach((pos) => {
+    console.log(pos, entities.value[pos])
+    if (grid.value[pos]) surroundingPositions.delete(pos)
+  })
+  // for attack it would check that they exist
   surroundingPositions.delete(initialPosition)
   return surroundingPositions
 })

@@ -5,6 +5,7 @@ import { createLevel, type Position } from '@/stores/single-entity-level'
 import { gameMachine } from '@/state-machines/gameMachine'
 import { level001 } from '@/assets/level-configs/level-001'
 import type { Subscription } from 'xstate'
+import type { EntityId } from '@/stores/entity'
 
 const gridX = 5;
 const gridY = 5
@@ -58,7 +59,7 @@ watch(turnActor, (newActor, oldActor) => {
   }
 })
 
-const selectablePositions = computed<Set<Position>>(() => {
+const selectableMovePositions = computed<Set<Position>>(() => {
   const range = 1
 
   const selectedId = turnContext.value?.selectedId
@@ -81,6 +82,17 @@ const selectablePositions = computed<Set<Position>>(() => {
   return surroundingPositions
 })
 
+type PositionStates =
+  | 'isSelectable'
+  | 'isSelected'
+  | 'isValidAttackTarget'
+  | 'isValidMoveTarget'
+const getPositionStates = (position: Position, entityId: EntityId | undefined): Record<PositionStates, boolean> => ({
+  isSelectable: !!(turnSnapshot.value?.matches({ 'teamTurn': 'unselected' }) && turnContext && entityId && entities.value[entityId].teamId === turnContext.value?.teamId),
+  isSelected: !!(entityId && turnContext.value?.selectedId === entityId),
+  isValidAttackTarget: false,
+  isValidMoveTarget: selectableMovePositions.value.has(position),
+})
 
 </script>
 
@@ -101,26 +113,24 @@ const selectablePositions = computed<Set<Position>>(() => {
       <button v-if="turnSnapshot?.matches('teamTurn')" @click="turnActorRef?.send({ type: 'turn.end' })">End
         Turn</button>
     </div>
+
     <!-- GRID -->
     <div class="grid" @contextmenu.prevent="() => { turnActorRef?.send({ type: 'entity.deselect' }) }">
-      <div v-for="( entityId, position ) in grid " :key="position" :class="{
-        'can-move-to': selectablePositions.has(position),
-        selected: entityId && turnContext?.selectedId === entityId,
-        selectable: turnSnapshot?.matches({ 'teamTurn': 'unselected' }) && turnContext && entityId && entities[entityId].teamId === turnContext.teamId
-      }" :text="entityId" @click="() => {
+      <div v-for="( entityId, position ) in grid " :key="position" :class="getPositionStates(position, entityId)"
+        :text="entityId" @click="() => {
+          const positionState = getPositionStates(position, entityId)
+          // if in unselected state and occupied, send selection event
+          if (entityId && positionState.isSelectable) {
+            turnActorRef?.send({ type: 'entity.select', entityId: entityId });
+          }
+          // TODO: Check if target is valid target (no friendly fire, no moving to occupied positions, no attacking empty positions, etc.)
 
-        // if in unselected state and occupied, send selection event
-        if (turnSnapshot?.matches({ 'teamTurn': 'unselected' }) && entityId) {
-          turnActorRef?.send({ type: 'entity.select', entityId: entityId });
-        }
-        // TODO: Check if target is valid target (no friendly fire, no moving to occupied positions, no attacking empty positions, etc.)
+          // if in targetSelection state and there's a selectedId send target selection event
+          if (positionState.isValidMoveTarget || positionState.isValidAttackTarget) {
+            turnActorRef?.send({ type: 'target.select', target: position })
+          }
 
-        // if in targetSelection state and there's a selectedId send target selection event
-        if (turnSnapshot?.matches({ teamTurn: { 'selected': 'targetSelection' } }) && turnContext?.selectedId) {
-          turnActorRef?.send({ type: 'target.select', target: position })
-        }
-
-      }">
+        }">
         <div>
           <img v-if="entityId" draggable="false" class="idle"
             :src="`/characters/character-${entities[entityId].name}.png`" :alt="entities[entityId].name" />
@@ -165,8 +175,14 @@ const selectablePositions = computed<Set<Position>>(() => {
   overflow-y: scroll;
 }
 
-.can-move-to {
+.isValidMoveTarget {
+  transition: transform 0.2s ease;
   animation: gradient 1s ease alternate infinite;
+}
+
+.isValidMoveTarget:hover {
+  transform: scale(1.05);
+  animation: hover-gradient 1s ease alternate infinite;
 }
 
 @keyframes gradient {
@@ -176,6 +192,16 @@ const selectablePositions = computed<Set<Position>>(() => {
 
   100% {
     background-color: rgba(0, 98, 255, 0.7);
+  }
+}
+
+@keyframes hover-gradient {
+  0% {
+    background-color: rgba(0, 229, 255, 0.5);
+  }
+
+  100% {
+    background-color: rgba(0, 191, 255, 0.7);
   }
 }
 
@@ -236,7 +262,7 @@ const selectablePositions = computed<Set<Position>>(() => {
   border: 1px dotted rgba(255, 255, 255, 0.5);
 }
 
-div.selectable {
+div.isSelectable {
   border-style: solid;
   border-width: 2px;
   border-top-color: rgb(124, 225, 126, 0.9);
@@ -246,7 +272,7 @@ div.selectable {
   border-radius: 5px;
 }
 
-div.selected {
+div.isSelected {
   border-style: solid;
   border-width: 2px;
   border-top-color: rgba(114, 87, 85, 0.9);

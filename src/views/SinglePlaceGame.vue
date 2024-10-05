@@ -4,6 +4,7 @@ import { useMachine, useSelector } from '@xstate/vue'
 import { createLevel, type Position } from '@/stores/single-entity-level'
 import { gameMachine } from '@/state-machines/gameMachine'
 import { level001 } from '@/assets/level-configs/level-001'
+import type { Subscription } from 'xstate'
 
 const gridX = 5;
 const gridY = 5
@@ -36,15 +37,25 @@ const turnSnapshot = computed(() => turnActor.value?.snapshot)
 const turnContext = computed(() => turnActor.value?.snapshot?.context)
 
 // TODO: figure out smarter way to do this
-const eventListenerAdded = ref(false)
-watch(turnActor, () => {
-  if (!turnActor.value) return
-  if (eventListenerAdded.value) return
-  turnActorRef.value?.on('entity.move', ({ entityId, target }) => {
-    const [newX, newY] = target.split('-').map(Number)
-    moveEntity(entityId, Number(newX), Number(newY))
-  })
-  eventListenerAdded.value = true
+// To remember the logic, essentially when a turn starts it needs to sub, and ends it needs to unsub
+const subscription = ref<Subscription | undefined>(undefined)
+watch(turnActor, (newActor, oldActor) => {
+  if (!newActor?.actorRef?.id) return
+  if (gameSnapshot.value.matches('turn') && !subscription.value) {
+
+    subscription.value = turnActorRef.value?.on('entity.move', ({ entityId, target }) => {
+      const [newX, newY] = target.split('-').map(Number)
+      moveEntity(entityId, Number(newX), Number(newY))
+    })
+
+    // add new subscriptions ie 'entity.attack'
+
+  }
+  if (!oldActor?.actorRef?.id) return
+  if (newActor.actorRef.id !== oldActor?.actorRef?.id) {
+    subscription.value?.unsubscribe()
+    subscription.value = undefined
+  }
 })
 
 const selectablePositions = computed<Set<Position>>(() => {

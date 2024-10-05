@@ -1,6 +1,6 @@
 import type { EntityId } from '@/stores/entity'
 import type { Position } from '@/stores/level'
-import { setup, assign } from 'xstate'
+import { setup, assign, emit } from 'xstate'
 
 type Action = {
   type?: 'attack' | 'move'
@@ -27,7 +27,8 @@ export const turnMachine = setup({
       | { type: 'entity.deselect' },
     input: {} as {
       teamId: 'good' | 'bad'
-    }
+    },
+    emitted: {} as { type: 'entity.move'; entityId: EntityId; target: Position }
   },
   actions: {
     deselectEntity: assign({ selectedId: undefined }),
@@ -97,6 +98,12 @@ export const turnMachine = setup({
           on: {
             'entity.deselect': {
               target: 'unselected'
+            },
+            'entity.select': {
+              actions: {
+                type: 'selectEntity',
+                params: ({ event }) => event.entityId
+              }
             }
           },
           states: {
@@ -141,7 +148,15 @@ export const turnMachine = setup({
                   },
                   {
                     target: '#turnMachine.teamTurn',
-                    actions: ['deselectEntity', 'removeAction'],
+                    actions: [
+                      emit(({ context, event }) => ({
+                        type: 'entity.move',
+                        entityId: context.selectedId as EntityId,
+                        target: event.target
+                      })),
+                      'deselectEntity',
+                      'removeAction'
+                    ],
                     reenter: true
                 }
                 ]

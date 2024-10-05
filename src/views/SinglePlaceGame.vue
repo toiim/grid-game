@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, onMounted, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useMachine, useSelector } from '@xstate/vue'
 import { createLevel, type Position } from '@/stores/single-entity-level'
 import { gameMachine } from '@/state-machines/gameMachine'
@@ -35,6 +35,18 @@ const turnActorRef = computed(() => turnActor.value?.actorRef)
 const turnSnapshot = computed(() => turnActor.value?.snapshot)
 const turnContext = computed(() => turnActor.value?.snapshot?.context)
 
+// TODO: figure out smarter way to do this
+const eventListenerAdded = ref(false)
+watch(turnActor, () => {
+  if (!turnActor.value) return
+  if (eventListenerAdded.value) return
+  turnActorRef.value?.on('entity.move', ({ entityId, target }) => {
+    const [newX, newY] = target.split('-').map(Number)
+    moveEntity(entityId, Number(newX), Number(newY))
+  })
+  eventListenerAdded.value = true
+})
+
 const selectablePositions = computed<Set<Position>>(() => {
   const range = 1
 
@@ -51,13 +63,13 @@ const selectablePositions = computed<Set<Position>>(() => {
   }
   // for move only
   surroundingPositions.forEach((pos) => {
-    console.log(pos, entities.value[pos])
     if (grid.value[pos]) surroundingPositions.delete(pos)
   })
   // for attack it would check that they exist
   surroundingPositions.delete(initialPosition)
   return surroundingPositions
 })
+
 
 </script>
 
@@ -94,8 +106,6 @@ const selectablePositions = computed<Set<Position>>(() => {
 
         // if in targetSelection state and there's a selectedId send target selection event
         if (turnSnapshot?.matches({ teamTurn: { 'selected': 'targetSelection' } }) && turnContext?.selectedId) {
-          const [newX, newY] = position.split('-')
-          moveEntity(turnContext?.selectedId, Number(newX), Number(newY))
           turnActorRef?.send({ type: 'target.select', target: position })
         }
 

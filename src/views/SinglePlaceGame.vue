@@ -39,23 +39,31 @@ const turnContext = computed(() => turnActor.value?.snapshot?.context)
 
 // TODO: figure out smarter way to do this
 // To remember the logic, essentially when a turn starts it needs to sub, and ends it needs to unsub
-const subscription = ref<Subscription | undefined>(undefined)
+const subscriptions = ref<(Subscription | undefined)[]>([])
 watch(turnActor, (newActor, oldActor) => {
   if (!newActor?.actorRef?.id) return
-  if (gameSnapshot.value.matches('turn') && !subscription.value) {
+  if (gameSnapshot.value.matches('turn') && subscriptions.value.length === 0) {
 
-    subscription.value = turnActorRef.value?.on('entity.move', ({ entityId, target }) => {
+    const moveSubscription = turnActorRef.value?.on('entity.move', ({ entityId, target }) => {
       const [newX, newY] = target.split('-').map(Number)
       moveEntity(entityId, Number(newX), Number(newY))
     })
 
     // add new subscriptions ie 'entity.attack'
+    const attackSubscription = turnActorRef.value?.on('entity.attack', ({ action }) => {
+      const targetEntityId = grid.value[action.target]
+      if (!targetEntityId) return
+      updateEntity(targetEntityId, 'health', entities.value[targetEntityId].health - 1)
+      turnActorRef.value?.send({ type: 'action.end' })
+    })
+
+    subscriptions.value = [moveSubscription, attackSubscription]
 
   }
   if (!oldActor?.actorRef?.id) return
   if (newActor.actorRef.id !== oldActor?.actorRef?.id) {
-    subscription.value?.unsubscribe()
-    subscription.value = undefined
+    subscriptions.value?.forEach((sub: undefined | Subscription) => sub?.unsubscribe())
+    subscriptions.value = []
   }
 })
 
@@ -90,7 +98,7 @@ type PositionStates =
 const getPositionStates = (position: Position, entityId: EntityId | undefined): Record<PositionStates, boolean> => ({
   isSelectable: !!(turnSnapshot.value?.matches({ 'teamTurn': 'unselected' }) && turnContext && entityId && entities.value[entityId].teamId === turnContext.value?.teamId),
   isSelected: !!(entityId && turnContext.value?.selectedId === entityId),
-  isValidAttackTarget: false,
+  isValidAttackTarget: !!(turnSnapshot.value?.context.action.type === 'attack' && turnSnapshot.value?.matches({ 'teamTurn': { 'selected': 'targetSelection' } }) && entityId && entities.value[entityId].teamId !== turnContext.value?.teamId),
   isValidMoveTarget: selectableMovePositions.value.has(position),
 })
 
@@ -105,8 +113,14 @@ const getPositionStates = (position: Position, entityId: EntityId | undefined): 
 
       <h2 v-if="turnSnapshot?.matches('teamTurn')">{{ turnContext?.teamId.toUpperCase() }} Team's Turn</h2>
       <!-- <div v-if="turnActor?.snapshot?.matches('teamTurn')" class="inputs"> -->
-      <div v-if="turnSnapshot?.matches({ 'teamTurn': 'selected' })" class="inputs">
-        <h4>{{ turnContext?.selectedId && entities[turnContext.selectedId].name }}</h4>
+      <div v-if="turnSnapshot?.matches({ 'teamTurn': 'selected' }) && turnContext?.selectedId" class="inputs">
+        <pre>
+name: {{ entities[turnContext.selectedId].name }}
+health: {{ entities[turnContext.selectedId].health }}
+strength: {{ entities[turnContext.selectedId].strength }}
+team: {{ entities[turnContext.selectedId].teamId }}
+status: {{ entities[turnContext.selectedId].status }}
+        </pre>
         <button @click="() => { turnActorRef?.send({ type: 'action.select', action: 'move' }) }">Move ➜</button>
         <button @click="() => { turnActorRef?.send({ type: 'action.select', action: 'attack' }) }">Attack ⚔️</button>
       </div>
@@ -180,9 +194,19 @@ const getPositionStates = (position: Position, entityId: EntityId | undefined): 
   animation: gradient 1s ease alternate infinite;
 }
 
+.isValidAttackTarget {
+  transition: transform 0.2s ease;
+  animation: attack-gradient 1s ease alternate infinite;
+}
+
 .isValidMoveTarget:hover {
   transform: scale(1.05);
   animation: hover-gradient 1s ease alternate infinite;
+}
+
+.isValidAttackTarget:hover {
+  transform: scale(1.05);
+  animation: hover-attack-gradient 1s ease alternate infinite;
 }
 
 @keyframes gradient {
@@ -202,6 +226,26 @@ const getPositionStates = (position: Position, entityId: EntityId | undefined): 
 
   100% {
     background-color: rgba(0, 191, 255, 0.7);
+  }
+}
+
+@keyframes attack-gradient {
+  0% {
+    background-color: rgba(255, 0, 0, 0.5);
+  }
+
+  100% {
+    background-color: rgba(255, 38, 0, 0.7);
+  }
+}
+
+@keyframes hover-attack-gradient {
+  0% {
+    background-color: rgba(255, 72, 0, 0.5);
+  }
+
+  100% {
+    background-color: rgba(255, 123, 0, 0.7);
   }
 }
 

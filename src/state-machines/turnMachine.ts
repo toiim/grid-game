@@ -21,6 +21,7 @@ export const turnMachine = setup({
     events: {} as
       | { type: 'turn.end' }
       | { type: 'action.select'; action: 'attack' | 'move' }
+      | { type: 'action.end' }
       | { type: 'entity.select'; entityId: EntityId }
       | { type: 'target.select'; target: EntityId | Position }
       | { type: 'action.deselect' }
@@ -28,7 +29,9 @@ export const turnMachine = setup({
     input: {} as {
       teamId: 'good' | 'bad'
     },
-    emitted: {} as { type: 'entity.move'; entityId: EntityId; target: Position }
+    emitted: {} as
+      | { type: 'entity.move'; entityId: EntityId; target: Position }
+      | { type: 'entity.attack'; action: { type: 'attack'; actor: EntityId; target: EntityId } }
   },
   actions: {
     deselectEntity: assign({ selectedId: undefined }),
@@ -59,7 +62,7 @@ export const turnMachine = setup({
     isAttack: ({ context, event }) => context.action.type === 'attack'
   }
 }).createMachine({
-  /** @xstate-layout N4IgpgJg5mDOIC5QBcCuAnAdgWQIYGMALAS0zADpkxcBbAFQ03NU1jABsx8qIBiMTMmLIAnuTaduAbQAMAXUSgADgHtYw4isyKQAD0QA2AIzkjAFhkAmGQHZbBmzYDMATksAaECMRHLl8o4yRkbOZn5mZgCsTgC+MZ5oWHhEpBRUtAxY4hxcPPyCwmIQcDnS8jqq6kJaOvoIRlYAHAFGjQYuNpYuka2NRp7eCGFOAS7dLjJmTgbGwWZxCYzJJGSU1PSM2ZI85ATVmADKpfv5QqJbubIKSCCVGjU3dUYzphFj5k5tRk6RHl6I02aZjGzkcUyM0SiCxAiRwBBWaXWmSYElykF23E0h2OWN4eyxFzK12Uanu2keiC6ZlMlmBEz6kycZhsA0QkSmLQMlnZwRcBjMBka0Nhy1Sawym1R3HRyFw6BgyCO21x+K05GKUuQVwqpP2tUpLmpvjpMgZU2ZrKGLhGlmelgMMlN7VNzmFS3hYvSGyymplcoVStyuNl8rAyEJWvKNzueopCAMP1eMgd9uBxjCluizW+XQhYUCrjdSQ9qy9yIj6NVmAAgphiDRcCdYeQBBBtdHdVj9fVIsnyH1ad8ZEzImMnJmIuR2d1GjYol1GlYi3CUqWkZLjpXMVpa-XG8HNq2pEZibdOw9QE8gs0bK12p1ur1+v8EE5nOQuuN+cPZ05bHF4hATAVA1HQRRLMAdSqLs4wAWiZftRxsNw3CcPwHUaS1YL5AIFxcBpXDfCJImXUU1wlLAoLJbtviTaw7BsBxnHwlwsJcD8F0aaI-2tRo+JIwDwNXREKKYFhfQgKjY0vHxuRscg0KsJw3z5PjZ0tH5-GQvlkwfMxzFdQT3WE8VvRRTdJI7aCLz0RA53IR1HKcpzxxfSxF3IMYOnc203C6BxSIg0zywkjF9kDbdyRJayots+o-Ac5ykuHTNPnIBN3L5QFaQiQKTLLDdtj9UNFRxGyYxgmShgcUwkKUlw+lvAxLQiGR0uZOcZEiLi+UiATFmLfL1x9CywqxXcG2ks8Yu7ZC2sFOcDG6gV3mal8s3StDGiywUcvmIzBoRch8BUGglE4KgpMquLIhZF82kiD87TMPpfk+YEAJiIA */
+  /** @xstate-layout N4IgpgJg5mDOIC5QBcCuAnAdgWQIYGMALAS0zADpkxcBbAFQ03NU1jABsx8qIBiMTMmLIAnuTaduAbQAMAXUSgADgHtYw4isyKQAD0QBGAOwBmcgA4ALOYBMBgKwBOe-ZsnT5gDQgRiGzJtyGQMANhNHSxlzcxcjOIBfeO80LDwiUgoqWgYsZlYOLh5eFKYBCFkFJBBVdSEtHX0EGW9fJsTkxjSSMkpqekZxAu5IfkFhMQg4IeQKnRqNeqrGgwNLA3JLGxCjGRDjExD7UJbEexkzGUt7c22DW0cbS0t2kBKujN7sgYlCkYEhUSDSQzeRzNQLbRLQwmGyBFZrO4GB4mS6WE4IExWIJXaImSxGexGGzmF5vAjdTJ9HJMH7DCDkAh1TAAZWmmkwowBYlpIMqynBTIafhClnIjiRbnMjiMKxFNns6PCjgsBhsRnMlxCVmuzySr065I+WX6uR5kAZ3HZrOB7N4jPZQMKsyq80FUIQbhk5DO0WCMnOMRWCp8iC1FwcESJBLiLlJBvSPWN1MddMouHQMGQ1sKtvtWnIkx5zv5tXZQoQkWVrlM9m2kUuwdaTlFjgCIr2RO2ezjqUNiap32m5uQ6cz2ctWmKo7AyBTvLBpcWoEacRC5GJdyMlkOVycjnRZyr4oe5hr5jxBx7OD7lK+pqH9JHGZn46ZU+fs6LBj51QFZfdhxmDsOqbJY7jnDY6IhG465gbsu7nueRhXu8-Z3jSD4WkyACCmDEDQuBviU5BlMWv6LpCy6GGca7mKqawonie4mAeTzepYzinlcNiOBqNiJHqmAqIWOhkgmYALhC5YALTWOi0mnhsjjKbxKJgQcxgoTenwmpR5FSe6qr2BY1h2E4LhuB46I7EEoSYpi-h4ps-F6mJFI6cmLBmhAklulRCAGOBQTEo8WwEiYriQSGFYwti1znvihLElp4keYOwKQL5-7+XcgQ+hqBj+piRwOIqqrkCYqpGM49gojKjy6h0vapUm6W-PSeYsmyS76X5eh+Hi5A7BqUSnlYYSNqGxgWNV+zwrEIQpe5rX3hlj7Tlm3V6a62X9QghLKtBgUOTcbhOOiu7sTqIRRBENwmEtRoDqt7VYeyuH4YRu07T1yxFUEvEcZVyKXCx0Uil6EWEocVhWI42yPT0+AqDQSicFQWW-acRjojcxl2NB1gOJKHECfEQA */
   context: ({ input }) => ({
     teamId: input.teamId,
     selectedId: undefined,
@@ -137,12 +140,19 @@ export const turnMachine = setup({
                     type: 'removeAction'
                   }
                 },
+                'action.select': {
+                  target: 'targetSelection',
+                  actions: {
+                    type: 'selectActionType',
+                    params: ({ event }) => event.action
+                  }
+                },
                 'target.select': [
                   {
-                  target: 'actionAnimation',
-                  actions: {
-                    type: 'selectActionTarget',
-                    params: ({ event }) => event.target
+                    target: 'actionAnimation',
+                    actions: {
+                      type: 'selectActionTarget',
+                      params: ({ event }) => event.target
                     },
                     guard: 'isAttack'
                   },
@@ -158,17 +168,29 @@ export const turnMachine = setup({
                       'removeAction'
                     ],
                     reenter: true
-                }
+                  }
                 ]
               }
             },
             actionAnimation: {
-              on: {
-                'turn.end': [
-                  {
-                    target: '#turnMachine.complete'
+              entry: [
+                emit(({ context }) => ({
+                  type: 'entity.attack',
+                  action: {
+                    type: context.action.type as 'attack',
+                    target: context.action.target as Position | EntityId,
+                    actor: context.selectedId as EntityId
                   }
-                ]
+                }))
+              ],
+              on: {
+                'action.end': {
+                  target: '#turnMachine.teamTurn',
+                  actions: ['deselectEntity', 'removeAction']
+                },
+                'turn.end': {
+                  target: '#turnMachine.complete'
+                }
               }
             }
           }

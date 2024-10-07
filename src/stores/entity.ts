@@ -8,6 +8,7 @@ export type BaseEntity = {
   teamId: 'good' | 'bad'
   name?: string
   health: number
+  maxHealth: number
   strength: number
   defense: number
   speed: number

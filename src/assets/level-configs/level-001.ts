@@ -23,6 +23,7 @@ export const level001: LevelConfig = {
         defense: 10,
         strength: 10,
         health: 10,
+        maxHealth: 10,
         speed: 10,
         status: [],
         magicSkill: 50
@@ -39,6 +40,7 @@ export const level001: LevelConfig = {
         defense: 10,
         strength: 10,
         health: 10,
+        maxHealth: 10,
         speed: 10,
         status: [],
         magicSkill: 50
@@ -55,6 +57,7 @@ export const level001: LevelConfig = {
         defense: 10,
         strength: 10,
         health: 10,
+        maxHealth: 10,
         speed: 10,
         status: [],
         magicSkill: 50
@@ -71,6 +74,7 @@ export const level001: LevelConfig = {
         defense: 10,
         strength: 10,
         health: 10,
+        maxHealth: 10,
         speed: 10,
         status: [],
         magicSkill: 50

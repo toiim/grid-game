@@ -141,7 +141,9 @@ status: {{ entities[turnContext.selectedId].status }}
     <!-- GRID -->
     <div class="grid" @contextmenu.prevent="() => { turnActorRef?.send({ type: 'entity.deselect' }) }">
       <div v-for="( entityId, position ) in grid " :key="position" :class="getPositionStates(position, entityId)"
-        :text="entityId" @mouseover="hoverTarget = position" @click="() => {
+        :text="entityId"
+        @mouseover="() => { if (getPositionStates(position, entityId).isValidMoveTarget) hoverTarget = position }"
+        @click="() => {
           const positionState = getPositionStates(position, entityId)
           // if in unselected state and occupied, send selection event
           if (entityId && positionState.isSelectable) {

@@ -4,6 +4,7 @@ import { useMachine, useSelector } from '@xstate/vue'
 import { createLevel, type Position } from '@/stores/single-entity-level'
 import { gameMachine } from '@/state-machines/gameMachine'
 import { level001 } from '@/assets/level-configs/level-001'
+import { findPath } from '@/composables/findPath'
 import type { Subscription } from 'xstate'
 import type { EntityId } from '@/stores/entity'
 
@@ -68,7 +69,7 @@ watch(turnActor, (newActor, oldActor) => {
 })
 
 const selectableMovePositions = computed<Set<Position>>(() => {
-  const range = 1
+  const range = 2
 
   const selectedId = turnContext.value?.selectedId
   const actionType = turnContext.value?.action.type
@@ -90,16 +91,25 @@ const selectableMovePositions = computed<Set<Position>>(() => {
   return surroundingPositions
 })
 
+const hoverTarget = ref<Position | undefined>(undefined)
+const potentialPath = computed(() => {
+  if (turnContext.value?.action.type !== 'move' || !hoverTarget.value || !turnContext.value?.selectedId || !entities.value[turnContext.value?.selectedId].position) return
+  return findPath({ ...grid.value }, entities.value[turnContext.value?.selectedId].position, hoverTarget.value)
+})
+
 type PositionStates =
   | 'isSelectable'
   | 'isSelected'
   | 'isValidAttackTarget'
   | 'isValidMoveTarget'
+  | 'isInPath'
+
 const getPositionStates = (position: Position, entityId: EntityId | undefined): Record<PositionStates, boolean> => ({
   isSelectable: !!(turnSnapshot.value?.matches({ 'teamTurn': 'unselected' }) && turnContext && entityId && entities.value[entityId].teamId === turnContext.value?.teamId),
   isSelected: !!(entityId && turnContext.value?.selectedId === entityId),
   isValidAttackTarget: !!(turnSnapshot.value?.context.action.type === 'attack' && turnSnapshot.value?.matches({ 'teamTurn': { 'selected': 'targetSelection' } }) && entityId && entities.value[entityId].teamId !== turnContext.value?.teamId),
   isValidMoveTarget: selectableMovePositions.value.has(position),
+  isInPath: !!(potentialPath.value?.includes(position))
 })
 
 </script>
@@ -131,7 +141,7 @@ status: {{ entities[turnContext.selectedId].status }}
     <!-- GRID -->
     <div class="grid" @contextmenu.prevent="() => { turnActorRef?.send({ type: 'entity.deselect' }) }">
       <div v-for="( entityId, position ) in grid " :key="position" :class="getPositionStates(position, entityId)"
-        :text="entityId" @click="() => {
+        :text="entityId" @mouseover="hoverTarget = position" @click="() => {
           const positionState = getPositionStates(position, entityId)
           // if in unselected state and occupied, send selection event
           if (entityId && positionState.isSelectable) {
@@ -194,17 +204,19 @@ status: {{ entities[turnContext.selectedId].status }}
   animation: gradient 1s ease alternate infinite;
 }
 
-.isValidAttackTarget {
-  transition: transform 0.2s ease;
-  animation: attack-gradient 1s ease alternate infinite;
-}
-
 .isValidMoveTarget:hover {
   transform: scale(1.05);
   animation: hover-gradient 1s ease alternate infinite;
 }
 
-.isValidAttackTarget:hover {
+.isValidAttackTarget,
+.isValidMoveTarget.isInPath {
+  transition: transform 0.2s ease;
+  animation: attack-gradient 1s ease alternate infinite;
+}
+
+.isValidAttackTarget:hover,
+.isValidMoveTarget.isInPath:hover {
   transform: scale(1.05);
   animation: hover-attack-gradient 1s ease alternate infinite;
 }

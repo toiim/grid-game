@@ -16,10 +16,12 @@ function generateGrid(gridX: number, gridY: number) {
   return grid
 }
 
+export type Grid = Record<Position, EntityId | undefined>
+
 export function createLevel(gridX: number, gridY: number) {
   const entities = ref<Record<string, Entity>>({})
 
-  const grid = ref<Record<Position, EntityId | undefined>>(generateGrid(gridX, gridY))
+  const grid = ref<Grid>(generateGrid(gridX, gridY))
 
   function moveEntity(entityId: EntityId, newX: number, newY: number, override?: boolean) {
     const newPosition = `${newX}-${newY}`

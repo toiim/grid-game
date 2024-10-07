@@ -8,6 +8,9 @@ dependencies:
   '@xstate/vue':
     specifier: ^3.1.4
     version: 3.1.4(vue@3.4.38)(xstate@5.18.2)
+  astar-typescript:
+    specifier: ^1.2.7
+    version: 1.2.7
   pinia:
     specifier: ^2.1.7
     version: 2.2.2(typescript@5.4.5)(vue@3.4.38)
@@ -1026,6 +1029,12 @@ packages:
     resolution: {integrity: sha512-jgsaNduz+ndvGyFt3uSuWqvy4lCnIJiovtouQN5JZHOKCS2QuhEdbcQHFhVksz2N2U9hXJo8odG7ETyWlEeuDw==}
     dev: true
 
+  /astar-typescript@1.2.7:
+    resolution: {integrity: sha512-1M9d8Mpu75oalRgdMi4QGdsEg1HMjvZXO4x31LIYR1uSyd8RKjfdQSYXQts2Nzg6PzxtGQvEYrikm+UjCATGWQ==}
+    dependencies:
+      lodash: 4.17.21
+    dev: false
+
   /asynckit@0.4.0:
     resolution: {integrity: sha512-Oei9OH4tRh0YqU3GxhX79dM/mwVgvbZJaSNaRk+bshkj0S5cfHcgYakreBjrHwatXKbz+IoIdYLxrKim2MjW0Q==}
     dev: true
@@ -1868,7 +1877,6 @@ packages:
 
   /lodash@4.17.21:
     resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}
-    dev: true
 
   /loupe@2.3.7:
     resolution: {integrity: sha512-zSMINGVYkdpYSOBmLi0D1Uo7JU9nVdQKrHxC8eYlV+9YKK9WePqAlL7lSlorG/U2Fw1w0hTBmaa/jrQ3UbPHtA==}

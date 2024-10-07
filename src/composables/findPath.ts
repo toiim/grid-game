@@ -24,7 +24,6 @@ const gridToMatrix = (grid: Grid, initialPosition: Position): number[][] => {
 
 export const findPath = (grid: Grid, initialPosition: Position, target: Position): Position[] => {
   const matrix = gridToMatrix(grid, initialPosition)
-  console.log('matrix: ', matrix)
   const aStarInstance = new AStarFinder({
     grid: {
       matrix

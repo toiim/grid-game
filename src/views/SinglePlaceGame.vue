@@ -105,7 +105,7 @@ type PositionStates =
   | 'isInPath'
 
 const getPositionStates = (position: Position, entityId: EntityId | undefined): Record<PositionStates, boolean> => ({
-  isSelectable: !!(turnSnapshot.value?.matches({ 'teamTurn': 'unselected' }) && turnContext && entityId && entities.value[entityId].teamId === turnContext.value?.teamId),
+  isSelectable: !!((turnSnapshot.value?.matches({ 'teamTurn': 'unselected' }) || turnSnapshot.value?.matches({ 'teamTurn': 'selected' })) && turnContext && entityId && entities.value[entityId].teamId === turnContext.value?.teamId),
   isSelected: !!(entityId && turnContext.value?.selectedId === entityId),
   isValidAttackTarget: !!(turnSnapshot.value?.context.action.type === 'attack' && turnSnapshot.value?.matches({ 'teamTurn': { 'selected': 'targetSelection' } }) && entityId && entities.value[entityId].teamId !== turnContext.value?.teamId),
   isValidMoveTarget: selectableMovePositions.value.has(position),

@@ -16,7 +16,7 @@ const emit = defineEmits<{
 onMounted(() => {
   setTimeout(() => {
     emit('complete')
-  }, 3000)
+  }, 3500)
 })
 
 const targetUrl = computed(() => `url("/characters/character-${target.name}.png")`)
@@ -27,8 +27,11 @@ const targetUrl = computed(() => `url("/characters/character-${target.name}.png"
   <div class="wrapper" @click="$emit('complete')">
     <img class="actor animate__animated animate__headShake animate__delay-1s"
       :src="`/characters/character-${actor.name}.png`" />
-    <div class="target animate__animated animate__jello animate__delay-2s">
-      <img :src="`/characters/character-${target.name}.png`" />
+    <div class="target-wrapper animate__animated animate__jello animate__delay-2s">
+      <div class="target">
+        <img :src="`/characters/character-${target.name}.png`" />
+      </div>
+      <span class="animate__animated animate__fadeOutUp animate__delay-3s">-1 Health</span>
     </div>
   </div>
 </template>
@@ -43,6 +46,10 @@ const targetUrl = computed(() => `url("/characters/character-${target.name}.png"
   background: linear-gradient(rgb(100, 190, 225), rgb(190, 240, 255) 50%, #428f42 50%, #317446 100%);
 }
 
+.target-wrapper {
+  position: relative;
+}
+
 .target {
   width: 30px;
   height: 40px;
@@ -52,6 +59,19 @@ const targetUrl = computed(() => `url("/characters/character-${target.name}.png"
 
 .target>img {
   animation: flash 0.8s linear 2s;
+}
+
+.target-wrapper>span {
+  position: absolute;
+  font-size: smaller;
+  width: 70px;
+  top: -20px;
+  left: -20px;
+  color: red;
+  background-color: white;
+  box-shadow: 0 0.25rem 0.25rem 0 rgba(10, 40, 10, 0.4);
+  text-align: center;
+  border-radius: 999px;
 }
 
 @keyframes flash {

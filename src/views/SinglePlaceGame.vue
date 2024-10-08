@@ -1,12 +1,14 @@
 <script lang="ts" setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { useMachine, useSelector } from '@xstate/vue'
+import 'animate.css'
 import { createLevel, type Position } from '@/stores/single-entity-level'
 import { gameMachine } from '@/state-machines/gameMachine'
 import { level001 } from '@/assets/level-configs/level-001'
 import { findPath } from '@/composables/findPath'
 import type { Subscription } from 'xstate'
 import type { EntityId } from '@/stores/entity'
+import ActionAnimation from '@/components/ActionAnimation.vue'
 
 const gridX = 5;
 const gridY = 5
@@ -52,10 +54,11 @@ watch(turnActor, (newActor, oldActor) => {
 
     // add new subscriptions ie 'entity.attack'
     const attackSubscription = turnActorRef.value?.on('entity.attack', ({ action }) => {
+      console.log(turnContext.value?.action)
+      console.log(action)
       const targetEntityId = grid.value[action.target]
       if (!targetEntityId) return
       updateEntity(targetEntityId, 'health', entities.value[targetEntityId].health - 1)
-      turnActorRef.value?.send({ type: 'action.end' })
     })
 
     subscriptions.value = [moveSubscription, attackSubscription]
@@ -135,7 +138,6 @@ const getPositionStates = (position: Position, entityId: EntityId | undefined): 
               <stop offset="100%" stop-color="#990044" />
             </linearGradient>
           </defs>
-          // health bar
           <rect x="1" y="1" :width="99" height="9" fill="url(#red)" />
           <rect x="1" y="1"
             :width="entities[turnContext.selectedId].health / entities[turnContext.selectedId].maxHealth * 100"
@@ -180,21 +182,45 @@ status: {{ entities[turnContext.selectedId].status }}
         </div>
       </div>
     </div>
+    {{ turnContext?.action }}
+    <Transition name="action-animation-modal" enter-active-class="animate__animated animate__bounceInUp animate__fast"
+      leave-active-class="animate__animated animate__bounceOutDown animate__fast">
+      <div
+        v-if="turnSnapshot?.matches({ 'teamTurn': { 'selected': 'actionAnimation' } }) && turnContext?.selectedId && turnContext?.action?.target && grid[turnContext?.action?.target]"
+        class="animation-overlay">
+        <ActionAnimation @complete="turnActorRef?.send({ type: 'action.end' })"
+          :actor="entities[turnContext.selectedId]" :target="entities[(grid[turnContext?.action?.target]) as EntityId]"
+          :action="turnContext.action" />
+      </div>
+    </Transition>
   </div>
-
-  <div class="state">
-    <pre>{{ gameSnapshot }}</pre>
-  </div>
-
   <div class="state">
     <pre>{{ turnSnapshot }}</pre>
+  </div>
+  <div class="state">
+    <pre>{{ gameSnapshot }}</pre>
   </div>
 </template>
 
 <style scoped>
 .turn {}
 
+.animation-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  align-content: center;
+}
+
+.animation-overlay>div {
+  display: flex;
+}
+
 .layout {
+  position: relative;
   margin-top: 20px;
   display: grid;
   grid-template-columns: 7fr 2fr;

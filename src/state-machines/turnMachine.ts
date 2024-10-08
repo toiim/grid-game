@@ -2,7 +2,7 @@ import type { EntityId } from '@/stores/entity'
 import type { Position } from '@/stores/level'
 import { setup, assign, emit } from 'xstate'
 
-type Action = {
+export type Action = {
   type?: 'attack' | 'move'
   actor?: EntityId
   target?: Position | EntityId
@@ -159,6 +159,10 @@ export const turnMachine = setup({
                   {
                     target: '#turnMachine.teamTurn',
                     actions: [
+                      {
+                        type: 'selectActionTarget',
+                        params: ({ event }) => event.target
+                      },
                       emit(({ context, event }) => ({
                         type: 'entity.move',
                         entityId: context.selectedId as EntityId,

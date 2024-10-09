@@ -118,7 +118,7 @@ const getPositionStates = (position: Position, entityId: EntityId | undefined): 
 </script>
 
 <template>
-  <div class="layout">
+  <div id="layout">
     <div>
       <button v-if="gameSnapshot.value === 'gameOpening'" @click="gameActor.send({ type: 'game.start' })">
         Start
@@ -157,7 +157,6 @@ status: {{ entities[turnContext.selectedId].status }}
         Turn</button>
     </div>
 
-    <!-- GRID -->
     <div class="grid" @contextmenu.prevent="() => { turnActorRef?.send({ type: 'entity.deselect' }) }">
       <div v-for="( entityId, position ) in grid " :key="position" :class="getPositionStates(position, entityId)"
         :text="entityId"
@@ -176,13 +175,10 @@ status: {{ entities[turnContext.selectedId].status }}
           }
 
         }">
-        <div>
-          <img v-if="entityId" draggable="false" class="idle"
-            :src="`/characters/character-${entities[entityId].name}.png`" :alt="entities[entityId].name" />
-        </div>
+        <img v-if="entityId" draggable="false" class="idle"
+          :src="`/characters/character-${entities[entityId].name}.png`" :alt="entities[entityId].name" />
       </div>
     </div>
-    {{ turnContext?.action }}
     <Transition name="action-animation-modal" enter-active-class="animate__animated animate__bounceInUp animate__fast"
       leave-active-class="animate__animated animate__bounceOutDown animate__fast">
       <div
@@ -203,7 +199,48 @@ status: {{ entities[turnContext.selectedId].status }}
 </template>
 
 <style scoped>
-.turn {}
+#layout {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: center;
+}
+
+.grid {
+  background: url(backgrounds/forest-01.png);
+  background-size: cover;
+  aspect-ratio: 1 / 1;
+  width: 100%;
+  padding: 5%;
+  gap: 5%;
+  image-rendering: pixelated;
+  user-select: none;
+  justify-content: center;
+  display: grid;
+  grid-template-columns: repeat(v-bind(gridX), minmax(0, 1fr));
+  grid-template-rows: repeat(v-bind(gridY) minmax(0, 1fr));
+}
+
+.grid>div {
+  position: relative;
+  aspect-ratio: 1 / 1;
+
+}
+
+.grid>div>img {
+  user-select: none;
+  position: absolute;
+  width: 70%;
+  top: -5%;
+}
+
+@media (min-width: 510px) {
+  #layout {
+    grid-template-columns: 1fr 1fr;
+  }
+}
 
 .animation-overlay {
   position: absolute;
@@ -217,13 +254,6 @@ status: {{ entities[turnContext.selectedId].status }}
 
 .animation-overlay>div {
   display: flex;
-}
-
-.layout {
-  position: relative;
-  margin-top: 20px;
-  display: grid;
-  grid-template-columns: 7fr 2fr;
 }
 
 .state {
@@ -304,29 +334,6 @@ status: {{ entities[turnContext.selectedId].status }}
   100% {
     background-color: rgba(255, 123, 0, 0.7);
   }
-}
-
-.grid {
-  background: url(backgrounds/forest-01.png);
-  image-rendering: pixelated;
-  user-select: none;
-  width: 240px;
-  height: 240px;
-  margin: auto;
-  padding: 10px;
-  font-size: xx-small;
-  /* width: calc(v-bind(gridX)*40px); */
-  justify-content: center;
-  display: grid;
-  gap: 5px;
-  grid-template-columns: repeat(v-bind(gridX), 40px);
-  grid-template-rows: repeat(v-bind(gridY), 40px);
-}
-
-.grid img {
-  user-select: none;
-  position: relative;
-  top: -11px;
 }
 
 .idle {

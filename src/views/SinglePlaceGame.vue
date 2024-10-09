@@ -190,12 +190,6 @@ status: {{ entities[turnContext.selectedId].status }}
       </div>
     </Transition>
   </div>
-  <div class="state">
-    <pre>{{ turnSnapshot }}</pre>
-  </div>
-  <div class="state">
-    <pre>{{ gameSnapshot }}</pre>
-  </div>
 </template>
 
 <style scoped>
@@ -232,8 +226,8 @@ status: {{ entities[turnContext.selectedId].status }}
 .grid>div>img {
   user-select: none;
   position: absolute;
-  width: 70%;
-  top: -5%;
+  width: 80%;
+  top: -20%;
 }
 
 @media (min-width: 510px) {

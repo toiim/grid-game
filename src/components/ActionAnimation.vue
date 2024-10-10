@@ -25,8 +25,9 @@ const targetUrl = computed(() => `url("/characters/character-${target.name}.png"
 
 <template>
   <div class="wrapper" @click="$emit('complete')">
-    <img class="actor animate__animated animate__headShake animate__delay-1s"
-      :src="`/characters/character-${actor.name}.png`" />
+    <div class="actor animate__animated animate__headShake animate__delay-1s">
+      <img :src="`/characters/character-${actor.name}.png`" />
+    </div>
     <div class="target-wrapper animate__animated animate__jello animate__delay-2s">
       <div class="target">
         <img :src="`/characters/character-${target.name}.png`" />
@@ -40,10 +41,18 @@ const targetUrl = computed(() => `url("/characters/character-${target.name}.png"
 <style scoped>
 .wrapper {
   margin: auto;
+  width: 20rem;
+  height: 12rem;
   padding: 1rem 3rem;
   box-shadow: 0 0.25rem 0.25rem 0 rgba(10, 40, 10, 0.4);
-  border-radius: 0.25rem;
   background: linear-gradient(rgb(100, 190, 225), rgb(190, 240, 255) 50%, #428f42 50%, #317446 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wrapper>div img {
+  width: 4rem;
 }
 
 .target-wrapper {
@@ -51,13 +60,15 @@ const targetUrl = computed(() => `url("/characters/character-${target.name}.png"
 }
 
 .target {
-  width: 30px;
-  height: 40px;
+  aspect-ratio: 3 / 4;
   background-color: red;
   mask-image: v-bind(targetUrl);
+  mask-size: 4rem;
 }
 
 .target>img {
+  aspect-ratio: 3 / 4;
+  width: 4rem;
   animation: flash 0.8s linear 2s;
 }
 
@@ -66,7 +77,7 @@ const targetUrl = computed(() => `url("/characters/character-${target.name}.png"
   font-size: smaller;
   width: 70px;
   top: -20px;
-  left: -20px;
+  left: 0;
   color: red;
   background-color: white;
   box-shadow: 0 0.25rem 0.25rem 0 rgba(10, 40, 10, 0.4);

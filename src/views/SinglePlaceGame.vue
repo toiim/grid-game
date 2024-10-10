@@ -119,14 +119,15 @@ const getPositionStates = (position: Position, entityId: EntityId | undefined): 
 
 <template>
   <div id="layout">
-    <div>
-      <button v-if="gameSnapshot.value === 'gameOpening'" @click="gameActor.send({ type: 'game.start' })">
+    <div id="meta">
+      <button id="start-button" v-if="gameSnapshot.value === 'gameOpening'"
+        @click="gameActor.send({ type: 'game.start' })">
         Start
       </button>
 
       <h2 v-if="turnSnapshot?.matches('teamTurn')">{{ turnContext?.teamId.toUpperCase() }} Team's Turn</h2>
       <!-- <div v-if="turnActor?.snapshot?.matches('teamTurn')" class="inputs"> -->
-      <div v-if="turnSnapshot?.matches({ 'teamTurn': 'selected' }) && turnContext?.selectedId" class="inputs">
+      <template v-if="turnSnapshot?.matches({ 'teamTurn': 'selected' }) && turnContext?.selectedId" class="inputs">
         <svg width="100" height="10">
           <defs>
             <linearGradient id="green" x1="0" x2="0" y1="0" y2="1">
@@ -152,7 +153,7 @@ status: {{ entities[turnContext.selectedId].status }}
         </pre>
         <button @click="() => { turnActorRef?.send({ type: 'action.select', action: 'move' }) }">Move ➜</button>
         <button @click="() => { turnActorRef?.send({ type: 'action.select', action: 'attack' }) }">Attack ⚔️</button>
-      </div>
+      </template>
       <button v-if="turnSnapshot?.matches('teamTurn')" @click="turnActorRef?.send({ type: 'turn.end' })">End
         Turn</button>
     </div>
@@ -195,7 +196,6 @@ status: {{ entities[turnContext.selectedId].status }}
 <style scoped>
 #layout {
   position: relative;
-  width: 100vw;
   height: 100vh;
   display: grid;
   grid-template-columns: 1fr;
@@ -214,7 +214,7 @@ status: {{ entities[turnContext.selectedId].status }}
   justify-content: center;
   display: grid;
   grid-template-columns: repeat(v-bind(gridX), minmax(0, 1fr));
-  grid-template-rows: repeat(v-bind(gridY) minmax(0, 1fr));
+  grid-template-rows: repeat(v-bind(gridY), minmax(0, 1fr));
 }
 
 .grid>div {
@@ -250,8 +250,33 @@ status: {{ entities[turnContext.selectedId].status }}
   display: flex;
 }
 
-.state {
-  font-size: xx-small;
+#meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid black;
+  padding: 1rem;
+}
+
+button {
+  min-width: 6rem;
+  padding: 1rem;
+  border: 1px solid black;
+  text-align: center;
+  align-self: center;
+  transition: all 0.2s ease;
+}
+
+button:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 8px rgba(0, 0, 0, 0.2);
+}
+
+button:active {
+  transform: translateY(1px);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .inputs {

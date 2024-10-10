@@ -9,6 +9,21 @@ import { RouterLink, RouterView } from 'vue-router'
       <RouterLink to="/single-game">Game</RouterLink>
     </nav>
   </header>
+  <div class="container">
 
-  <RouterView />
+    <RouterView />
+  </div>
 </template>
+
+<style>
+:root {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+@media (min-width: 1280px) {
+  .container {
+    max-width: 1280px;
+    margin: 0 auto;
+  }
+}
+</style>

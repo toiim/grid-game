@@ -9,6 +9,7 @@ import { findPath } from '@/composables/findPath'
 import type { Subscription } from 'xstate'
 import type { EntityId } from '@/stores/entity'
 import ActionAnimation from '@/components/ActionAnimation.vue'
+import EntityInfoCard from '@/components/EntityInfoCard.vue'
 
 const gridX = 5;
 const gridY = 5
@@ -128,29 +129,7 @@ const getPositionStates = (position: Position, entityId: EntityId | undefined): 
       <h2 v-if="turnSnapshot?.matches('teamTurn')">{{ turnContext?.teamId.toUpperCase() }} Team's Turn</h2>
       <!-- <div v-if="turnActor?.snapshot?.matches('teamTurn')" class="inputs"> -->
       <template v-if="turnSnapshot?.matches({ 'teamTurn': 'selected' }) && turnContext?.selectedId" class="inputs">
-        <svg width="100" height="10">
-          <defs>
-            <linearGradient id="green" x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%" stop-color="#00ff55" />
-              <stop offset="100%" stop-color="#00cc44" />
-            </linearGradient>
-            <linearGradient id="red" x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%" stop-color="#ff0055" />
-              <stop offset="100%" stop-color="#990044" />
-            </linearGradient>
-          </defs>
-          <rect x="1" y="1" :width="99" height="9" fill="url(#red)" />
-          <rect x="1" y="1"
-            :width="entities[turnContext.selectedId].health / entities[turnContext.selectedId].maxHealth * 100"
-            height="9" fill="url(#green)" />
-        </svg>
-        <pre>
-name: {{ entities[turnContext.selectedId].name }}
-health: {{ entities[turnContext.selectedId].health }} / {{ entities[turnContext.selectedId].maxHealth }}
-strength: {{ entities[turnContext.selectedId].strength }}
-team: {{ entities[turnContext.selectedId].teamId }}
-status: {{ entities[turnContext.selectedId].status }}
-        </pre>
+        <EntityInfoCard :entity="entities[turnContext.selectedId]" />
         <button @click="() => { turnActorRef?.send({ type: 'action.select', action: 'move' }) }">Move ➜</button>
         <button @click="() => { turnActorRef?.send({ type: 'action.select', action: 'attack' }) }">Attack ⚔️</button>
       </template>

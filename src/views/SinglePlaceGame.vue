@@ -125,11 +125,14 @@ const getPositionStates = (position: Position, entityId: EntityId | undefined): 
         @click="gameActor.send({ type: 'game.start' })">
         Start
       </button>
+      <div class="flex">
+        <EntityInfoCard v-for="entity in entities" :entity="entity" :key="entity.id" />
+      </div>
 
       <h2 v-if="turnSnapshot?.matches('teamTurn')">{{ turnContext?.teamId.toUpperCase() }} Team's Turn</h2>
       <!-- <div v-if="turnActor?.snapshot?.matches('teamTurn')" class="inputs"> -->
       <template v-if="turnSnapshot?.matches({ 'teamTurn': 'selected' }) && turnContext?.selectedId" class="inputs">
-        <EntityInfoCard :entity="entities[turnContext.selectedId]" />
+        <!-- <EntityInfoCard :entity="entities[turnContext.selectedId]" /> -->
         <button @click="() => { turnActorRef?.send({ type: 'action.select', action: 'move' }) }">Move ➜</button>
         <button @click="() => { turnActorRef?.send({ type: 'action.select', action: 'attack' }) }">Attack ⚔️</button>
       </template>
@@ -173,6 +176,12 @@ const getPositionStates = (position: Position, entityId: EntityId | undefined): 
 </template>
 
 <style scoped>
+.flex {
+  display: flex;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+}
+
 #layout {
   position: relative;
   height: 100vh;

@@ -10,6 +10,7 @@ defineProps<{
 <template>
   <div class="wrapper">
 
+    <img :src="`/characters/character-${entity.name}.png`" />
 
     <svg width="100" height="10">
       <defs>
@@ -25,13 +26,12 @@ defineProps<{
       <rect x="1" y="1" :width="99" height="9" fill="url(#red)" />
       <rect x="1" y="1" :width="entity.health / entity.maxHealth * 100" height="9" fill="url(#green)" />
     </svg>
-    <pre>
-name: {{ entity.name }}
+    <pre>name: {{ entity.name }}
 health: {{ entity.health }} / {{ entity.maxHealth }}
 strength: {{ entity.strength }}
 team: {{ entity.teamId }}
 status: {{ entity.status }}
-        </pre>
+</pre>
   </div>
 </template>
 <style>

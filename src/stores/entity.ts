@@ -1,5 +1,5 @@
 import type { SkillName } from './skills'
-import type { Position } from './level'
+import type { Position } from './single-entity-level'
 import type { Status } from './status'
 /** EntityId is a UUID accessible on all Entities as id */
 export type EntityId = string

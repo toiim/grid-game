@@ -7,6 +7,8 @@ export type EntityId = string
 export type BaseEntity = {
   teamId: 'good' | 'bad'
   name?: string
+  stamina: number
+  maxStamina: number
   health: number
   maxHealth: number
   strength: number

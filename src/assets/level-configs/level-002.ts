@@ -1,11 +1,11 @@
 import type { LevelConfig } from './types'
 
-export const level001: LevelConfig = {
+export const level002: LevelConfig = {
   description: '',
   width: 5,
   height: 5,
   background: 'village-01',
-  blockedPositions: ['0-0', '0-1', '3-3', '4-3', '3-4', '4-4'],
+  blockedPositions: ['0-0', '1-0', '3-2', '3-3', '4-2', '4-3'],
   entities: [
     {
       x: 0,

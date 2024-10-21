@@ -4,8 +4,8 @@ export const level001: LevelConfig = {
   description: '',
   width: 5,
   height: 5,
-  background: 'forest-01',
-  blockedPositions: [],
+  background: 'village-01',
+  blockedPositions: ['0-0', '0-1', '3-3', '4-3', '3-4', '4-4'],
   entities: [
     {
       x: 0,
@@ -16,7 +16,7 @@ export const level001: LevelConfig = {
         name: 'blue',
         stamina: 3,
         maxStamina: 3,
-        skills: [],
+        skills: ['fire-blast', 'heal'],
         defense: 10,
         strength: 10,
         health: 10,
@@ -35,45 +35,7 @@ export const level001: LevelConfig = {
         name: 'white',
         stamina: 3,
         maxStamina: 3,
-        skills: [],
-        defense: 10,
-        strength: 10,
-        health: 10,
-        maxHealth: 10,
-        speed: 10,
-        status: [],
-        magicSkill: 50
-      }
-    },
-    {
-      x: 2,
-      y: 2,
-      entity: {
-        teamId: 'good',
-        level: 1,
-        name: 'red',
-        stamina: 3,
-        maxStamina: 3,
-        skills: [],
-        defense: 10,
-        strength: 10,
-        health: 10,
-        maxHealth: 10,
-        speed: 10,
-        status: [],
-        magicSkill: 50
-      }
-    },
-    {
-      x: 4,
-      y: 3,
-      entity: {
-        teamId: 'bad',
-        level: 1,
-        name: 'purple',
-        stamina: 3,
-        maxStamina: 3,
-        skills: [],
+        skills: ['slash'],
         defense: 10,
         strength: 10,
         health: 10,

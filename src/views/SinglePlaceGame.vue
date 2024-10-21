@@ -5,22 +5,24 @@ import 'animate.css'
 import { createLevel, type Position } from '@/stores/single-entity-level'
 import { gameMachine } from '@/state-machines/gameMachine'
 import { level001 } from '@/assets/level-configs/level-001'
+import { level002 } from '@/assets/level-configs/level-002'
 import { findPath } from '@/composables/findPath'
 import type { Subscription } from 'xstate'
 import type { EntityId } from '@/stores/entity'
 import ActionAnimation from '@/components/ActionAnimation.vue'
 import EntityInfoCard from '@/components/EntityInfoCard.vue'
+import type { LevelConfig } from '@/assets/level-configs/types'
 
-const gridX = 5;
-const gridY = 5
 
-const { grid, entities, addEntity, entityIds, updateEntity, moveEntity } = createLevel(level001.width, level001.height)
 
+const selectedLevel = ref<LevelConfig>(level002)
+const { grid, entities, addEntity, entityIds, updateEntity, moveEntity } = createLevel(selectedLevel.value.width, selectedLevel.value.height)
+const cssBackground = computed(() => `url("backgrounds/${selectedLevel.value.background}.png")`)
 const { actorRef: gameActor, snapshot: gameSnapshot } = useMachine(gameMachine)
 
 onMounted(() => {
   gameActor.start()
-  level001.entities.forEach(entityConfig => addEntity(entityConfig.x, entityConfig.y, entityConfig.entity))
+  selectedLevel.value.entities.forEach(entityConfig => addEntity(entityConfig.x, entityConfig.y, entityConfig.entity))
 })
 
 const turnActor = computed(() => {
@@ -92,6 +94,9 @@ const selectableMovePositions = computed<Set<Position>>(() => {
   })
   // for attack it would check that they exist
   surroundingPositions.delete(initialPosition)
+  selectedLevel.value.blockedPositions.forEach((pos) => {
+    surroundingPositions.delete(pos)
+  })
   return surroundingPositions
 })
 
@@ -107,13 +112,15 @@ type PositionStates =
   | 'isValidAttackTarget'
   | 'isValidMoveTarget'
   | 'isInPath'
+  | 'isAccessible'
 
 const getPositionStates = (position: Position, entityId: EntityId | undefined): Record<PositionStates, boolean> => ({
   isSelectable: !!((turnSnapshot.value?.matches({ 'teamTurn': 'unselected' }) || turnSnapshot.value?.matches({ 'teamTurn': 'selected' })) && turnContext && entityId && entities.value[entityId].teamId === turnContext.value?.teamId),
   isSelected: !!(entityId && turnContext.value?.selectedId === entityId),
   isValidAttackTarget: !!(turnSnapshot.value?.context.action.type === 'attack' && turnSnapshot.value?.matches({ 'teamTurn': { 'selected': 'targetSelection' } }) && entityId && entities.value[entityId].teamId !== turnContext.value?.teamId),
   isValidMoveTarget: selectableMovePositions.value.has(position),
-  isInPath: !!(potentialPath.value?.includes(position))
+  isInPath: !!(potentialPath.value?.includes(position)),
+  isAccessible: !(selectedLevel.value.blockedPositions.includes(position))
 })
 
 </script>
@@ -191,7 +198,7 @@ const getPositionStates = (position: Position, entityId: EntityId | undefined): 
 }
 
 .grid {
-  background: url(backgrounds/forest-01.png);
+  background: v-bind(cssBackground);
   background-size: cover;
   aspect-ratio: 1 / 1;
   width: 100%;
@@ -201,8 +208,8 @@ const getPositionStates = (position: Position, entityId: EntityId | undefined): 
   user-select: none;
   justify-content: center;
   display: grid;
-  grid-template-columns: repeat(v-bind(gridX), minmax(0, 1fr));
-  grid-template-rows: repeat(v-bind(gridY), minmax(0, 1fr));
+  grid-template-columns: repeat(v-bind(selectedLevel.width), minmax(0, 1fr));
+  grid-template-rows: repeat(v-bind(selectedLevel.height), minmax(0, 1fr));
 }
 
 .grid>div {
@@ -370,14 +377,14 @@ button:active {
   }
 }
 
-.grid>div {
+.grid>div.isAccessible {
   display: grid;
   place-items: center;
   border-radius: 1px;
   border: 1px dotted rgba(255, 255, 255, 0.5);
 }
 
-div.isSelectable {
+.grid>div.isSelectable {
   border-style: solid;
   border-width: 2px;
   border-top-color: rgb(124, 225, 126, 0.9);
@@ -387,7 +394,7 @@ div.isSelectable {
   border-radius: 5px;
 }
 
-div.isSelected {
+.grid>div.isSelected {
   border-style: solid;
   border-width: 2px;
   border-top-color: rgba(114, 87, 85, 0.9);

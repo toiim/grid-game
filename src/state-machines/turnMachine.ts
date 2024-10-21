@@ -1,5 +1,5 @@
 import type { EntityId } from '@/stores/entity'
-import type { Position } from '@/stores/level'
+import type { Position } from '@/stores/single-entity-level'
 import { setup, assign, emit } from 'xstate'
 
 export type Action = {
@@ -78,6 +78,11 @@ export const turnMachine = setup({
     teamTurn: {
       initial: 'unselected',
       description: 'single team turn loop',
+      on: {
+        'turn.end': {
+          target: '#turnMachine.complete'
+        }
+      },
       states: {
         unselected: {
           on: {
@@ -87,9 +92,6 @@ export const turnMachine = setup({
                 type: 'selectEntity',
                 params: ({ event }) => event.entityId
               }
-            },
-            'turn.end': {
-              target: '#turnMachine.complete'
             }
           },
           entry: {
@@ -191,9 +193,6 @@ export const turnMachine = setup({
                 'action.end': {
                   target: '#turnMachine.teamTurn',
                   actions: ['deselectEntity', 'removeAction']
-                },
-                'turn.end': {
-                  target: '#turnMachine.complete'
                 }
               }
             }

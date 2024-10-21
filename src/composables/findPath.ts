@@ -7,7 +7,11 @@ const positionToArray = (position: Position): [x: number, y: number] =>
 const ArrayToPosition = (position: [x: number, y: number]): Position =>
   `${position[0]}-${position[1]}`
 
-const gridToMatrix = (grid: Grid, initialPosition: Position): number[][] => {
+const gridToMatrix = (
+  grid: Grid,
+  blockedPositions: Position[],
+  initialPosition: Position
+): number[][] => {
   // remove initial entity so they don't block their own path
   grid[initialPosition] = undefined
 
@@ -16,14 +20,19 @@ const gridToMatrix = (grid: Grid, initialPosition: Position): number[][] => {
   const matrix: number[][] = []
   positions.forEach(([x, y]) => {
     if (!matrix[y]) matrix[y] = []
-    matrix[y][x] = grid[`${x}-${y}`] ? 1 : 0
+    matrix[y][x] = grid[`${x}-${y}`] || blockedPositions.includes(`${x}-${y}`) ? 1 : 0
   })
 
   return matrix
 }
 
-export const findPath = (grid: Grid, initialPosition: Position, target: Position): Position[] => {
-  const matrix = gridToMatrix(grid, initialPosition)
+export const findPath = (
+  grid: Grid,
+  blockedPositions: Position[],
+  initialPosition: Position,
+  target: Position
+): Position[] => {
+  const matrix = gridToMatrix(grid, blockedPositions, initialPosition)
   const aStarInstance = new AStarFinder({
     grid: {
       matrix

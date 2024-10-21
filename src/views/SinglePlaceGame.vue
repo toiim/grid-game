@@ -16,7 +16,7 @@ import type { LevelConfig } from '@/assets/level-configs/types'
 
 
 const selectedLevel = ref<LevelConfig>(level002)
-const { grid, entities, addEntity, entityIds, updateEntity, moveEntity } = createLevel(selectedLevel.value.width, selectedLevel.value.height)
+const { grid, entities, addEntity, updateEntity, moveEntity, blockedPositions } = createLevel(selectedLevel.value.width, selectedLevel.value.height, selectedLevel.value.blockedPositions)
 const cssBackground = computed(() => `url("backgrounds/${selectedLevel.value.background}.png")`)
 const { actorRef: gameActor, snapshot: gameSnapshot } = useMachine(gameMachine)
 
@@ -103,7 +103,8 @@ const selectableMovePositions = computed<Set<Position>>(() => {
 const hoverTarget = ref<Position | undefined>(undefined)
 const potentialPath = computed(() => {
   if (turnContext.value?.action.type !== 'move' || !hoverTarget.value || !turnContext.value?.selectedId || !entities.value[turnContext.value?.selectedId].position) return
-  return findPath({ ...grid.value }, entities.value[turnContext.value?.selectedId].position, hoverTarget.value)
+  // TODO: ensure blockedPositions get dealt with
+  return findPath({ ...grid.value }, [...blockedPositions.value], entities.value[turnContext.value?.selectedId].position, hoverTarget.value)
 })
 
 type PositionStates =

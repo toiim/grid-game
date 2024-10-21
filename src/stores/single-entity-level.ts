@@ -18,16 +18,31 @@ function generateGrid(gridX: number, gridY: number) {
 
 export type Grid = Record<Position, EntityId | undefined>
 
-export function createLevel(gridX: number, gridY: number) {
+export function createLevel(gridX: number, gridY: number, initialBlockedPositions?: Position[]) {
   const entities = ref<Record<string, Entity>>({})
+  const blockedPositions = ref<Set<Position>>(new Set())
 
   const grid = ref<Grid>(generateGrid(gridX, gridY))
+
+  function blockPosition(position: Position) {
+    blockedPositions.value.add(position)
+  }
+  function unBlockPosition(position: Position) {
+    blockedPositions.value.delete(position)
+  }
+
+  if (initialBlockedPositions) {
+    initialBlockedPositions.forEach((blockedPosition) => blockPosition(blockedPosition))
+  }
 
   function moveEntity(entityId: EntityId, newX: number, newY: number, override?: boolean) {
     const newPosition = `${newX}-${newY}`
 
     if (!entities.value[entityId]) {
       throw new Error('EntityID does not exist')
+    }
+    if (blockedPositions.value.has(newPosition)) {
+      throw new Error('Position is blocked')
     }
     if (grid.value[newPosition] !== undefined) {
       throw new Error(`Another Entity already exists in position ${newPosition}`)
@@ -53,6 +68,10 @@ export function createLevel(gridX: number, gridY: number) {
     const entityId: EntityId = crypto.randomUUID()
     const position = `${x}-${y}`
 
+    if (blockedPositions.value.has(position)) {
+      throw new Error('Position is blocked')
+    }
+
     if (grid.value[position] !== undefined) {
       throw new Error(`Another Entity already exists in position ${position}`)
     }
@@ -71,5 +90,15 @@ export function createLevel(gridX: number, gridY: number) {
     return entityId
   }
 
-  return { grid, entities, entityIds, addEntity, moveEntity, updateEntity }
+  return {
+    grid,
+    entities,
+    entityIds,
+    blockedPositions,
+    blockPosition,
+    unBlockPosition,
+    addEntity,
+    moveEntity,
+    updateEntity
+  }
 }

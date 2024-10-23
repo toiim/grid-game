@@ -1,6 +1,7 @@
 import type { SkillName } from './skills'
-import type { Position } from './single-entity-level'
+import type { Coordinates } from './single-entity-level'
 import type { Status } from './status'
+
 /** EntityId is a UUID accessible on all Entities as id */
 export type EntityId = string
 
@@ -22,6 +23,6 @@ export type BaseEntity = {
 
 export interface Entity extends BaseEntity {
   id: EntityId
-  position: Position
-  move: (newX: number, newY: number) => void
+  coordinates: Coordinates
+  move: (coordinates: Coordinates) => void
 }

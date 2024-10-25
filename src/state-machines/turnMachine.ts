@@ -12,6 +12,7 @@ export const turnMachine = setup({
     context: {} as {
       teamId: 'good' | 'bad'
       selectedId?: EntityId
+      commandPoints: number
       action: {
         type?: 'attack' | 'move'
         actor?: EntityId
@@ -28,6 +29,7 @@ export const turnMachine = setup({
       | { type: 'entity.deselect' },
     input: {} as {
       teamId: 'good' | 'bad'
+      commandPoints?: number
     },
     emitted: {} as
       | { type: 'entity.move'; entityId: EntityId; target: Position }
@@ -66,6 +68,7 @@ export const turnMachine = setup({
   context: ({ input }) => ({
     teamId: input.teamId,
     selectedId: undefined,
+    commandPoints: input.commandPoints || 3,
     action: {
       type: undefined,
       actor: undefined,

@@ -29,11 +29,6 @@ export function createLevel(gridX: number, gridY: number, initialBlockedPosition
   const entities = ref<Record<string, Entity>>({})
 
   const grid = ref<Grid>(generateGrid(gridX, gridY))
-  if (initialBlockedPositions) {
-    initialBlockedPositions.forEach(([x, y]) => {
-      grid.value[y][x].blocked = true
-    })
-  }
 
   function blockPosition([x, y]: Coordinates) {
     grid.value[y][x].blocked = true
@@ -101,11 +96,7 @@ export function createLevel(gridX: number, gridY: number, initialBlockedPosition
   }
 
   const positions = computed<Position[]>(() => {
-    const positions = [] as Position[]
-    grid.value.forEach((y) => {
-      positions.push(...positions, ...y)
-    })
-    return positions
+    return ([] as Position[]).concat(...grid.value)
   })
   const blockedPositions = computed(() => {
     return positions.value.filter((position) => position.blocked)

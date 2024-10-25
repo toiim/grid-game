@@ -14,6 +14,7 @@ function generateGrid(gridX: number, gridY: number): Grid {
   const grid = [] as Position[][]
   for (let y = 0; y < gridY; y++) {
     for (let x = 0; x < gridX; x++) {
+      if (!grid[y]) grid[y] = []
       grid[y][x] = {
         coordinates: [x, y],
         entity: undefined,

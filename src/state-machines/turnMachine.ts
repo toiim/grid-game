@@ -1,30 +1,30 @@
 import type { EntityId } from '@/stores/entity'
-import type { Position } from '@/stores/single-entity-level'
+import type { Coordinates } from '@/stores/single-entity-level'
+import type { SkillName } from '@/stores/skills'
 import { setup, assign, emit } from 'xstate'
 
-export type Action = {
-  type?: 'attack' | 'move'
-  actor?: EntityId
-  target?: Position | EntityId
+// TODO: select a skill after selecting the action as skill
+
+type SkillAction = {
+  skill?: SkillName
+  target?: EntityId
 }
+
 export const turnMachine = setup({
   types: {
     context: {} as {
       teamId: 'good' | 'bad'
       selectedId?: EntityId
       commandPoints: number
-      action: {
-        type?: 'attack' | 'move'
-        actor?: EntityId
-        target?: Position | EntityId
-      }
+      action?: SkillAction
     },
     events: {} as
       | { type: 'turn.end' }
-      | { type: 'action.select'; action: 'attack' | 'move' }
+      | { type: 'action.select'; skill: SkillName }
       | { type: 'action.end' }
+      | { type: 'entity.move'; target: Coordinates }
       | { type: 'entity.select'; entityId: EntityId }
-      | { type: 'target.select'; target: EntityId | Position }
+      | { type: 'target.select'; target: EntityId }
       | { type: 'action.deselect' }
       | { type: 'entity.deselect' },
     input: {} as {
@@ -32,22 +32,22 @@ export const turnMachine = setup({
       commandPoints?: number
     },
     emitted: {} as
-      | { type: 'entity.move'; entityId: EntityId; target: Position }
-      | { type: 'entity.attack'; action: { type: 'attack'; actor: EntityId; target: EntityId } }
+      | { type: 'entity.move'; entityId: EntityId; target: Coordinates }
+      | { type: 'entity.skill'; skill: SkillName; actor: EntityId; target: EntityId }
   },
   actions: {
     deselectEntity: assign({ selectedId: undefined }),
     selectEntity: assign({
       selectedId: (_, params: EntityId) => params
     }),
-    selectActionType: assign({
-      action: ({ context }, params: 'attack' | 'move') => ({
+    selectActionSkill: assign({
+      action: ({ context }, params: SkillName) => ({
         ...context.action,
-        type: params
+        skill: params
       })
     }),
     selectActionTarget: assign({
-      action: ({ context }, params: EntityId | Position) => ({
+      action: ({ context }, params: EntityId) => ({
         ...context.action,
         target: params
       })
@@ -56,24 +56,19 @@ export const turnMachine = setup({
       action: {}
     }),
     addAction: assign({
-      action: (_, params: Action) => params
+      action: (_, params: SkillAction) => params
     })
   },
   guards: {
     gameOver: ({ context, event }) => true,
-    isAttack: ({ context, event }) => context.action.type === 'attack'
+    isSkill: ({ context, event }) => context?.action?.type === 'skill'
   }
 }).createMachine({
-  /** @xstate-layout N4IgpgJg5mDOIC5QBcCuAnAdgWQIYGMALAS0zADpkxcBbAFQ0wGI0tyxMIBtABgF1EoAA4B7WMWTERmQSAAeiAIwBWHsvIAWAMwA2AOwBORQa08TOxQBoQAT0QAOcltUbF95fb0Ame-a9avAF9A61YcAhIySmp6RnJUTFgwABswfCoIJg5JZBtyJNT03gEkEFFxSWlZBQQ3HnIeLzMNHj1VCzUvazsEJr1yewMvHx4ee10dRuDQxjwiUgoqWgY2ArSMrMwcvIg4FPXi2XKJKRlSmsVFV00vfR4LPV1lRR1uxFUtBo0PfTcvIY0GmmIDCc0iixiK0w+X26Ugm22MMKyEOpWOlTOoAuw3U91MylMeOUeg0bwQpk+PC0Jl0ox0Bj0jOBoIiC2iyziazhEHIBAxAGVYRiERI8lyUfwjmITlVzohbhpyEYhlpBnpLjoNF5lGTqQYBoovHp7DwNDp7N8LczZqyoktYqshZBeelToLkacmHzTkiDpK0dKMdV5aZyKpfDxFKNVc8VGTzZSVAYNN42ozlMprVgwWz7VDfdzKLh0DBkO71p7vdJyLtxajhIHTsGEC19cojc59C1TTrbO9k0rGpqHrc9BYs+F5nbIZynTzkMXS+XXdIvSvoXX-Q2Kk25QgLYqzIZRsadP5lAYyWbFGHlT5Hh4tNodBOc9OOY7kc6FyWwGWhZ6P6lgWEolNuMqYvIiCMjo5A+G4JI6Mo3wXpefYIKobZ3p4zjjM+r62hCH4bnORa-v+HqrkBf4gVwihgWUjayliiBIZ8ehqAeXjaBxATxv4cHaPcKHjOMegEVOREOiRX48lWmAAIKYMQNC4MK8nsJw9aMTuzFQbUhIDPoOgmSmWiXFq8ZaP09LJtSVz2DoqpBMCmAiLWsgspJUq6ZBNRoT0AC0hjkFcBgXhxjkZkhmYhCCNqSey0k+RBzaKAEDRNMmrTtFG7Zkm0AxDCMBilRmBj0hJ4JJfmCTipAKVBnuVyXAMwmRqMeLWbqjJwf8SEvACkYGFVuYzp+6wNQGvlpX4YZjCaUZUu4ly9j05leE4hpjimyYWBMo3vtJIHOvJy5NeBF36f4iqRaMvjGmazjxoo-SeEYjwWRmY6HVJ+b1fOi5-udu6XaD+nEvqZ7pc5jnngFiAoWGlpmmMyaOVov01bOskuhiSkqWp4PouDFzRg0BgWiYxj+KaWjxi0TjfUhFpU-oWP4CINBCKkVCNaT7x6GSUVwS83H2Co-hU8EwRAA */
+  /** @xstate-layout N4IgpgJg5mDOIC5QBcCuAnAdgWQIYGMALAS0zADpkxcBbAFQ0wGI0tyxMIBtABgF1EoAA4B7WMWTERmQSAAeiALQAOAKzlVATgAsPAGwAmbQbUGAjDwDMAGhABPRNtXrly83r2Xll1ZYDseqoAvkG2rDgEJGSU1PSM5KiYsGAANmD4VBBMHJLIduTJaRm8AkggouKS0rIKCIoGfuR6fn7KemZmfsaaljzatg51Bv7kPf5+Zm0Gmu3eIWGMeESkFFS0DGyF6ZnZmLn5EHCp2yWyFRJSMmW1Zlqjzco8PD2qBs9qA0rm2qOqE1MzHjKYx+eYgcJLKKrWIbTAFY4ZSC7fbworIU5lc5VK6gWqWPQ8DR+VTaPyaHgdUnaYGfIYjMYBEyaCYGQxgiGRFYxdbxLaIrI5CT5GgiABuYAxwjEF2q10Qqk65GBJmmOkegU0tPq9Ms-maXie2m07MWnOiazimwRmXIBGxAGVrZdkULUSd+GdpdiaohGjMAo9ScSKcD+vZELc9E01ArtJ0LAFfCasJCuRbYW7+baMpdHWjnXbLpn0R7MV7Lj6EJ1GoZqbdLAZpsozCZaX4DOReoEeBMeKoPG1QaFwabluaYbzrZBKLh0DBkHntgWc9JyIc+SXSlLKhW5Qh8WZyEYg7oTK4-FrCX4G54TH92xTyXpkxEx9CeVa0dPkLP54uV8wharhukrlOWsq4og+JXgSxhmIEejAg2tK3D8TjXr4yiaH8jbEi+qbjh+cIbt+v5gAuTrSCwZHIMWoFYrukEIL4jS+M4biJsM1Jth2XbaJozaWAJuoUvhZrvpaxFThABQANbECkKQAIKYMQNC4NiTBAXCHDcKW24yji8i+syTRaIYkxUk8mrhnSfq6gE16PH0xpgpgIjrrIHJvp6O4QcZdRmNolhHkYJh6HGB6NqoWr9lG7Qtu2Zg6A2DZiW+3KSb5hmVoo2GhcYbSRe00VaqSmjkB0iVxq8hiaAY6VQplGaJCREDZd6e6KKSBXhcVLZGFqlg9VVDRmL0GHNI1aYTp+2yQB1jEBd1PzTLoqgUnoDIRVqrhHjevRYToQWNtNhGScW07af+nUGbdAUhX4fY6MJ+iGPig22flJi9F4ygtL4wyaGdEkZm1M5zuRN1LQx-l4p4nZqLolhBdeTwxV96g-VY57Eg2wUg81k5fjJsDyYpKlqRpMPgUZtRkuowmhroMZ9m2h6tL06GqG0PjA8O3lNfgIg0EIaRUItcPyqtxL8V0wI9rcZi0k4Py3p0EWtMFPQhCEQA */
   context: ({ input }) => ({
     teamId: input.teamId,
     selectedId: undefined,
-    commandPoints: input.commandPoints || 3,
-    action: {
-      type: undefined,
-      actor: undefined,
-      target: undefined
-    }
+    commandPoints: input.commandPoints || 3
   }),
   id: 'turnMachine',
   initial: 'teamTurn',
@@ -112,6 +107,17 @@ export const turnMachine = setup({
                 type: 'selectEntity',
                 params: ({ event }) => event.entityId
               }
+            },
+            'entity.move': {
+              target: '#turnMachine.teamTurn',
+              reenter: true,
+              actions: [
+                emit(({ context, event }) => ({
+                  type: 'entity.move',
+                  entityId: context.selectedId as EntityId,
+                  target: event.target as Coordinates
+                }))
+              ]
             }
           },
           states: {
@@ -131,8 +137,8 @@ export const turnMachine = setup({
                 'action.select': {
                   target: 'targetSelection',
                   actions: {
-                    type: 'selectActionType',
-                    params: ({ event }) => event.action
+                    type: 'selectActionSkill',
+                    params: ({ event }) => event.skill
                   }
                 }
               }
@@ -148,54 +154,32 @@ export const turnMachine = setup({
                 'action.select': {
                   target: 'targetSelection',
                   actions: {
-                    type: 'selectActionType',
-                    params: ({ event }) => event.action
+                    type: 'selectActionSkill',
+                    params: ({ event }) => event.skill
                   }
                 },
-                'target.select': [
-                  {
-                    target: 'actionAnimation',
-                    actions: {
-                      type: 'selectActionTarget',
-                      params: ({ event }) => event.target
-                    },
-                    guard: 'isAttack'
-                  },
-                  {
-                    target: '#turnMachine.teamTurn',
-                    actions: [
-                      {
-                        type: 'selectActionTarget',
-                        params: ({ event }) => event.target
-                      },
-                      emit(({ context, event }) => ({
-                        type: 'entity.move',
-                        entityId: context.selectedId as EntityId,
-                        target: event.target
-                      })),
-                      'deselectEntity',
-                      'removeAction'
-                    ],
-                    reenter: true
+                'target.select': {
+                  target: 'skillAnimation',
+                  actions: {
+                    type: 'selectActionTarget',
+                    params: ({ event }) => event.target
                   }
-                ]
+                }
               }
             },
-            actionAnimation: {
+            skillAnimation: {
               entry: [
                 emit(({ context }) => ({
-                  type: 'entity.attack',
-                  action: {
-                    type: context.action.type as 'attack',
-                    target: context.action.target as Position | EntityId,
-                    actor: context.selectedId as EntityId
-                  }
+                  type: 'entity.skill',
+                  skill: context.action?.skill as SkillName,
+                  actor: context.selectedId as EntityId,
+                  target: context.action?.target as EntityId
                 }))
               ],
               on: {
                 'action.end': {
                   target: '#turnMachine.teamTurn',
-                  actions: ['deselectEntity', 'removeAction']
+                  actions: ['removeAction']
                 }
               }
             }

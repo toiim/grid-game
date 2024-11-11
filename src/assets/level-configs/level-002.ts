@@ -10,8 +10,8 @@ export const level002: LevelConfig = {
     [0, 1],
     [3, 2],
     [3, 3],
-    [4, 2],
-    [4, 3]
+    [2, 4],
+    [3, 4]
   ],
   entities: [
     {

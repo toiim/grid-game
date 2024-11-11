@@ -3,7 +3,7 @@ import type { Coordinates } from '@/stores/single-entity-level'
 import type { SkillName } from '@/stores/skills'
 import { setup, assign, emit } from 'xstate'
 
-// TODO: select a skill after selecting the action as skill
+// TODO: implement command point guards and decrements
 
 type SkillAction = {
   skill?: SkillName

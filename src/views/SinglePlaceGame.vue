@@ -2,7 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useMachine, useSelector } from '@xstate/vue'
 import 'animate.css'
-import { createLevel, type Position } from '@/stores/single-entity-level'
+import { createLevel, type Coordinates, type Position } from '@/stores/single-entity-level'
 import { gameMachine } from '@/state-machines/gameMachine'
 import { level001 } from '@/assets/level-configs/level-001'
 import { level002 } from '@/assets/level-configs/level-002'
@@ -16,13 +16,13 @@ import type { LevelConfig } from '@/assets/level-configs/types'
 
 
 const selectedLevel = ref<LevelConfig>(level002)
-const { grid, entities, addEntity, updateEntity, moveEntity, blockedPositions } = createLevel(selectedLevel.value.width, selectedLevel.value.height, selectedLevel.value.blockedPositions)
+const { grid, entities, addEntity, updateEntity, moveEntity, blockedPositions, positions } = createLevel(selectedLevel.value.width, selectedLevel.value.height, selectedLevel.value.blockedPositions)
 const cssBackground = computed(() => `url("backgrounds/${selectedLevel.value.background}.png")`)
 const { actorRef: gameActor, snapshot: gameSnapshot } = useMachine(gameMachine)
 
 onMounted(() => {
   gameActor.start()
-  selectedLevel.value.entities.forEach(entityConfig => addEntity(entityConfig.x, entityConfig.y, entityConfig.entity))
+  selectedLevel.value.entities.forEach(entityConfig => addEntity(entityConfig.coordinates, entityConfig.entity))
 })
 
 const turnActor = computed(() => {
@@ -51,17 +51,15 @@ watch(turnActor, (newActor, oldActor) => {
   if (gameSnapshot.value.matches('turn') && subscriptions.value.length === 0) {
 
     const moveSubscription = turnActorRef.value?.on('entity.move', ({ entityId, target }) => {
-      const [newX, newY] = target.split('-').map(Number)
-      moveEntity(entityId, Number(newX), Number(newY))
+      moveEntity(entityId, target)
     })
 
     // add new subscriptions ie 'entity.attack'
-    const attackSubscription = turnActorRef.value?.on('entity.attack', ({ action }) => {
+    const attackSubscription = turnActorRef.value?.on('entity.skill', ({ skill, actor, target }) => {
       console.log(turnContext.value?.action)
-      console.log(action)
-      const targetEntityId = grid.value[action.target]
-      if (!targetEntityId) return
-      updateEntity(targetEntityId, 'health', entities.value[targetEntityId].health - 1)
+      console.log(skill)
+      if (!entities.value[target]) return
+      updateEntity(target, 'health', entities.value[target].health - 1)
     })
 
     subscriptions.value = [moveSubscription, attackSubscription]
@@ -74,23 +72,21 @@ watch(turnActor, (newActor, oldActor) => {
   }
 })
 
-const selectableMovePositions = computed<Set<Position>>(() => {
+const selectableMovePositions = computed<Set<Coordinates>>(() => {
   const range = 2
 
   const selectedId = turnContext.value?.selectedId
-  const actionType = turnContext.value?.action.type
-  if (!selectedId || actionType !== 'move') return new Set<Position>()
-  const initialPosition = entities.value[selectedId].position
-  const [initialX, initialY] = initialPosition.split('-').map((char) => Number(char))
-  const surroundingPositions = new Set<Position>()
+  if (!selectedId) return new Set<Coordinates>()
+  const initialPosition = entities.value[selectedId].coordinates
+  const surroundingPositions = new Set<Coordinates>()
   for (let x = -range; x < range + 1; x++) {
     for (let y = -range; y < range + 1; y++) {
-      surroundingPositions.add(`${initialX + x}-${initialY + y}`)
+      surroundingPositions.add(initialPosition)
     }
   }
   // for move only
   surroundingPositions.forEach((pos) => {
-    if (grid.value[pos]) surroundingPositions.delete(pos)
+    if (grid.value[pos[1]][pos[0]]) surroundingPositions.delete(pos)
   })
   // for attack it would check that they exist
   surroundingPositions.delete(initialPosition)
@@ -102,7 +98,7 @@ const selectableMovePositions = computed<Set<Position>>(() => {
 
 const hoverTarget = ref<Position | undefined>(undefined)
 const potentialPath = computed(() => {
-  if (turnContext.value?.action.type !== 'move' || !hoverTarget.value || !turnContext.value?.selectedId || !entities.value[turnContext.value?.selectedId].position) return
+  if (!hoverTarget.value || !turnContext.value?.selectedId || !entities.value[turnContext.value?.selectedId].position) return
   // TODO: ensure blockedPositions get dealt with
   return findPath({ ...grid.value }, [...blockedPositions.value], entities.value[turnContext.value?.selectedId].position, hoverTarget.value)
 })
@@ -110,18 +106,18 @@ const potentialPath = computed(() => {
 type PositionStates =
   | 'isSelectable'
   | 'isSelected'
-  | 'isValidAttackTarget'
+  // | 'isValidAttackTarget'
   | 'isValidMoveTarget'
-  | 'isInPath'
+  // | 'isInPath'
   | 'isAccessible'
 
-const getPositionStates = (position: Position, entityId: EntityId | undefined): Record<PositionStates, boolean> => ({
+const getPositionStates = (coordinates: Coordinates, entityId: EntityId | undefined): Record<PositionStates, boolean> => ({
   isSelectable: !!((turnSnapshot.value?.matches({ 'teamTurn': 'unselected' }) || turnSnapshot.value?.matches({ 'teamTurn': 'selected' })) && turnContext && entityId && entities.value[entityId].teamId === turnContext.value?.teamId),
   isSelected: !!(entityId && turnContext.value?.selectedId === entityId),
-  isValidAttackTarget: !!(turnSnapshot.value?.context.action.type === 'attack' && turnSnapshot.value?.matches({ 'teamTurn': { 'selected': 'targetSelection' } }) && entityId && entities.value[entityId].teamId !== turnContext.value?.teamId),
-  isValidMoveTarget: selectableMovePositions.value.has(position),
-  isInPath: !!(potentialPath.value?.includes(position)),
-  isAccessible: !(selectedLevel.value.blockedPositions.includes(position))
+  // isValidAttackTarget: !!(turnSnapshot.value?.context.action.type === 'attack' && turnSnapshot.value?.matches({ 'teamTurn': { 'selected': 'targetSelection' } }) && entityId && entities.value[entityId].teamId !== turnContext.value?.teamId),
+  isValidMoveTarget: selectableMovePositions.value.has(coordinates),
+  // isInPath: !!(potentialPath.value?.includes(position)),
+  isAccessible: !(selectedLevel.value.blockedPositions.includes(coordinates))
 })
 
 </script>

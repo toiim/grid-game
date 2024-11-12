@@ -8,14 +8,14 @@ export const level002: LevelConfig = {
   blockedPositions: [
     [0, 0],
     [0, 1],
-    [3, 2],
+    [2, 3],
     [3, 3],
     [2, 4],
     [3, 4]
   ],
   entities: [
     {
-      coordinates: [0, 4],
+      coordinates: [4, 0],
       entity: {
         teamId: 'good',
         level: 1,
@@ -105,7 +105,7 @@ export const level002: LevelConfig = {
       }
     },
     {
-      coordinates: [2, 3],
+      coordinates: [3, 2],
       entity: {
         teamId: 'bad',
         level: 1,

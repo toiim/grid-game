@@ -4,14 +4,14 @@ This is a small turn-based game written in Vue and using XState for its state ma
 
 ## Ideas
 
-- Add stamina to entities
-- Add command points to player turns (limits number of units used)
-- Add deployment at beginning of game
-- Daily puzzle
-- Stamina used to auto dodge
-- Stamina used to move or attack
-- Tiers/puzzles based on command points
-- Prizes higher in higher puzzles
+- [ ] Add stamina to entities
+- [ ] Add command points to player turns (limits number of units used)
+- [ ] Add deployment at beginning of game
+- [ ] Daily puzzle
+- [ ] Stamina used to auto dodge
+- [ ] Stamina used to move or attack
+- [ ] Tiers/puzzles based on command points
+- [ ] Prizes higher in higher puzzles
 
 ## Customize configuration
 
